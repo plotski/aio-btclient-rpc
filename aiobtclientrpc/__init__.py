@@ -7,4 +7,4 @@ __author_email__ = 'plotski@example.org'
 
 from ._base import RPCBase
 from ._errors import *
-from ._utils import ConnectionStatus
+from ._utils import ConnectionStatus, client, clients

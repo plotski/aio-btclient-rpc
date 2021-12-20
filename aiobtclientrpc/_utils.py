@@ -1,4 +1,5 @@
 import enum
+import inspect
 import os
 import re
 import urllib.parse
@@ -11,6 +12,40 @@ _log = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 5.0
 """Default request timeout in seconds"""
+
+
+def clients():
+    """Return list of :class:`~.RPCBase` subclasses"""
+    import aiobtclientrpc
+    basecls = aiobtclientrpc.RPCBase
+    subclses = set()
+    for name, value in inspect.getmembers(aiobtclientrpc):
+        if (
+            value is not basecls and
+            isinstance(value, type) and
+            issubclass(value, basecls)
+        ):
+            subclses.add(value)
+    return sorted(subclses, key=lambda cls: cls.name)
+
+
+def client(name, *args, **kwargs):
+    """
+    Convenience function to instantiate a :class:`~.RPCBase` subclass
+
+    :param str name: :attr:`~.RPCBase.name` of the client
+    :param args: Positional arguments to pass to the :class:`~.RPCBase` subclass
+    :param kwargs: Keyword arguments to pass to the :class:`~.RPCBase` subclass
+
+    :raise ValueError: if there is no :class:`~.RPCBase` subclass with a
+        matching `name`
+
+    :return: :class:`~.RPCBase` instance
+    """
+    for cls in clients():
+        if cls.name == name:
+            return cls(*args, **kwargs)
+    raise _errors.ValueError(f'No such client: {name}')
 
 
 class ConnectionStatus(enum.Enum):

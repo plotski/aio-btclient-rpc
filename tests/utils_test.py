@@ -15,6 +15,50 @@ class AsyncMock(Mock):
         return coro()
 
 
+def test_clients(mocker):
+    import aiobtclientrpc
+    assert _utils.clients() == [
+        aiobtclientrpc.QbittorrentRPC,
+        aiobtclientrpc.RtorrentRPC,
+        aiobtclientrpc.TransmissionRPC,
+    ]
+
+
+@pytest.mark.parametrize(
+    argnames='names, name, args, kwargs, exp_exception',
+    argvalues=(
+        (('foo', 'bar', 'baz'), 'foo', (1, 2, 3), {'hey': 'ho'}, None),
+        (('foo', 'bar', 'baz'), 'bar', (1, 2, 3), {}, None),
+        (('foo', 'bar', 'baz'), 'baz', (), {'hey': 'ho'}, None),
+        (('foo', 'bar', 'baz'), 'asdf', (), {}, _errors.ValueError('No such client: asdf')),
+    ),
+)
+def test_client(names, name, args, kwargs, exp_exception, mocker):
+    def MockRPC(name):
+        cls_mock = Mock()
+        cls_mock.configure_mock(name=name)
+        return cls_mock
+
+    client_clses = [MockRPC(name) for name in names]
+    mocker.patch('aiobtclientrpc._utils.clients', return_value=client_clses)
+
+    if exp_exception:
+        with pytest.raises(type(exp_exception), match=rf'^{re.escape(str(exp_exception))}$'):
+            _utils.client(name, *args, **kwargs)
+        for cls in client_clses:
+            assert cls.call_args_list == []
+
+    else:
+        return_value = _utils.client(name, *args, **kwargs)
+        for cls in client_clses:
+            if cls.name == name:
+                assert return_value is cls.return_value
+                assert cls.call_args_list == [call(*args, **kwargs)]
+            else:
+                assert return_value is not cls.return_value
+                assert cls.call_args_list == []
+
+
 def test_ConnectionStatus():
     assert _utils.ConnectionStatus('connecting') == _utils.ConnectionStatus.connecting
     assert _utils.ConnectionStatus('connected') == _utils.ConnectionStatus.connected
