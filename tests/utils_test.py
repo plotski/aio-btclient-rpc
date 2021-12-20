@@ -351,6 +351,33 @@ def test_URL_with_auth(url, auth, exp_url):
         assert url.password is None
 
 
+@pytest.mark.parametrize(
+    argnames='url1, url2, exp_equal',
+    argvalues=(
+        ('http://a:b@localhost:1234/some/path', 'http://a:b@localhost:1234/some/path', True),
+        ('http://a:b@localhost:1234/some/path', 'http://a:b@localhost:1234/other/path', False),
+        ('http://a:b@localhost:1234/some/path', 'http://a:b@localhost:1235/some/path', False),
+        ('http://a:b@localhost:1234/some/path', 'http://a:b@localhoft:1234/some/path', False),
+        ('http://a:b@localhost:1234/some/path', 'http://a:c@localhost:1234/some/path', False),
+        ('http://a:b@localhost:1234/some/path', 'http://c:b@localhost:1234/some/path', False),
+        ('http://a:b@localhost:1234/some/path', 'ftp://a:b@localhost:1234/some/path', False),
+        ('http://a:b@localhost:1234/some/path', Mock(), NotImplemented),
+    ),
+)
+def test_URL_equality(url1, url2, exp_equal, mocker):
+    if exp_equal is True:
+        assert _utils.URL(url1) == _utils.URL(url2)
+        assert _utils.URL(url1) == url2
+        assert url1 == _utils.URL(url2)
+    elif exp_equal is False:
+        assert _utils.URL(url1) != _utils.URL(url2)
+        assert _utils.URL(url1) != url2
+        assert url1 != _utils.URL(url2)
+    else:
+        assert _utils.URL(url1).__eq__(url2) is NotImplemented
+        assert _utils.URL(url1).__ne__(url2) is NotImplemented
+
+
 def test_URL_str(mocker):
     url = _utils.URL('this://localhost')
     mocker.patch.object(type(url), 'without_auth', PropertyMock(return_value='mocked URL'))

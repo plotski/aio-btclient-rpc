@@ -255,6 +255,18 @@ class URL:
     def __str__(self):
         return self.without_auth
 
+    def __eq__(self, other):
+        if isinstance(other, type(self)):
+            return self.with_auth == other.with_auth
+        elif isinstance(other, str):
+            return self.with_auth == other
+        else:
+            return NotImplemented
+
+    def __ne__(self, other):
+        eq = self.__eq__(other)
+        return NotImplemented if eq is NotImplemented else not eq
+
     def __repr__(self):
         text = f'{type(self).__name__}({str(self)!r}'
         if self._on_change:
