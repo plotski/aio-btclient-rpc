@@ -94,8 +94,11 @@ async def test_disconnect(exception, mocker):
     rpc.url = 'http://a:b@foo:123'
 
     mocker.patch.object(rpc, '_send_post_request', AsyncMock(side_effect=exception))
-
-    await rpc._disconnect()
+    if exception:
+        with pytest.raises(type(exception), match=rf'^{re.escape(str(exception))}$'):
+            await rpc._disconnect()
+    else:
+        await rpc._disconnect()
 
     assert rpc._send_post_request.call_args_list == [call(
         'http://foo:123/api/v2/auth/logout',

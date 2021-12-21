@@ -62,11 +62,7 @@ class QbittorrentRPC(_base.RPCBase):
             raise _errors.RPCError(response.text)
 
     async def _disconnect(self):
-        try:
-            await self._send_post_request(f'{self.url}/api/v2/auth/logout')
-        except _errors.ConnectionError:
-            # Don't fail if the client isn't running
-            pass
+        await self._send_post_request(f'{self.url}/api/v2/auth/logout')
 
     async def _call(self, method, **parameters):
         url = f'{self.url}/api/v2/{method}'
