@@ -251,7 +251,13 @@ class RPCBase(abc.ABC):
         """
         Call RPC method and return the result
 
-        This method first calls :meth:`connect` unless we are already connected.
+        If :attr:`status` is not :attr:`.ConnectionStatus.connected`, call
+        :meth:`connect` first.
+
+        :raise ConnectionError: if the logout request failed
+        :raise TimeoutError: if there is no response after :attr:`timeout` seconds
+        :raise RPCError: if there is any miscommunication between us and the RPC
+            interface
         """
         _log.debug('%s: [%s] Calling: %s, %s', self.label, self.status, args, kwargs)
         if self.status is not _utils.ConnectionStatus.connected:
