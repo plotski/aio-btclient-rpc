@@ -6,11 +6,11 @@ class Error(Exception):
 
 
 class RPCError(Error):
-    """Miscommunication with the RPC server, e.g. unknown method"""
+    """Miscommunication with the RPC service, e.g. unknown method called"""
 
 
 class ConnectionError(Error):
-    """Failed connect to the client, e.g. because it isn't running"""
+    """Failed to connect to the client, e.g. because it isn't running"""
 
     def __init__(self, msg):
         # python_socks.ProxyConnectionError provides ugly errors messages,
