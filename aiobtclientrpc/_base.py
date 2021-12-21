@@ -209,7 +209,23 @@ class RPCBase(abc.ABC):
             _log.debug('%s: connect(): Freed connection lock (status=%s)', self.label, self.status)
 
     async def disconnect(self):
-        """Disconnect from RPC interface"""
+        """
+        Disconnect from RPC interface
+
+        Do nothing if :attr:`status` indicates we are already connected.
+
+        It is safe to call this method multiple times concurrently. The first
+        call will actually disconnect while the remaining calls wait for it to
+        finish before they return.
+
+        :attr:`status` is always :attr:`.ConnectionStatus.disconnected` when
+        this method returns, regardless of any raised exceptions.
+
+        :raise ConnectionError: if the logout request failed
+        :raise TimeoutError: if there is no response after :attr:`timeout` seconds
+        :raise RPCError: if there is any miscommunication between us and the RPC
+            interface
+        """
         _log.debug('%s: disconnect(): Waiting for connection lock (status=%s)', self.label, self.status)
         try:
             async with self._connection_lock:
