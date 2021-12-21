@@ -224,11 +224,11 @@ class RPCBase(abc.ABC):
                         raise _errors.TimeoutError(f'Timeout after {self.timeout} seconds')
 
                     finally:
-                        await self._close_http_client()
                         self._status = _utils.ConnectionStatus.disconnected
                         self._call_callback('disconnected')
 
         finally:
+            await self._close_http_client()
             _log.debug('%s: disconnect(): Freed connection lock (status=%s)', self.label, self.status)
 
     async def call(self, *args, **kwargs):

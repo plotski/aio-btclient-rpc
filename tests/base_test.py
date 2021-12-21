@@ -165,7 +165,12 @@ async def test_connect(raised_exception, exp_exception, mocker):
     assert rpc.status is _utils.ConnectionStatus.connected
 
 
-@pytest.mark.parametrize('status', (_utils.ConnectionStatus.connected, _utils.ConnectionStatus.connecting))
+@pytest.mark.parametrize('status', (
+    _utils.ConnectionStatus.connecting,
+    _utils.ConnectionStatus.connected,
+    _utils.ConnectionStatus.disconnected,
+), ids=lambda v: str(v),
+)
 @pytest.mark.parametrize(
     argnames='raised_exception, exp_exception',
     argvalues=(
@@ -173,7 +178,9 @@ async def test_connect(raised_exception, exp_exception, mocker):
         (asyncio.TimeoutError('Timeout'), _errors.TimeoutError(f'Timeout after {_utils.DEFAULT_TIMEOUT} seconds')),
         (_errors.RPCError('No dice'), _errors.RPCError('No dice')),
         (RuntimeError('Unexpected error'), RuntimeError('Unexpected error')),
-    ))
+    ),
+    ids=lambda v: str(v),
+)
 @pytest.mark.asyncio
 async def test_disconnect(raised_exception, exp_exception, status, mocker):
     rpc = MockRPC()
@@ -189,18 +196,30 @@ async def test_disconnect(raised_exception, exp_exception, status, mocker):
     # Disconnect multiple times concurrently
     disconnect_calls = (rpc.disconnect(), rpc.disconnect(), rpc.disconnect(), rpc.disconnect())
     cbs._disconnect.side_effect = raised_exception
-    if exp_exception:
+    if exp_exception and status is not _utils.ConnectionStatus.disconnected:
         with pytest.raises(type(exp_exception), match=rf'^{re.escape(str(exp_exception))}$'):
             await asyncio.gather(*disconnect_calls)
     else:
         await asyncio.gather(*disconnect_calls)
 
-    # Disconnecting always succeeds, even if it fails
-    assert cbs.mock_calls == [
-        call._disconnect(),
-        call._close_http_client(),
-        call._call_callback('disconnected'),
-    ]
+    if status is _utils.ConnectionStatus.disconnected:
+        # We were already disconnected, but because we are thorough, we made
+        # extra sure the HTTP client was closed.
+        assert cbs.mock_calls == [
+            call._close_http_client(),
+        ] * len(disconnect_calls)
+
+    else:
+        # _disconnect() and the callback are only called if we weren't already
+        # disconnected. The first rpc.disconnect() did the trick and the others
+        # just closed the client (which should do nothing if it's already
+        # closed).
+        assert cbs.mock_calls == [
+            call._disconnect(),
+            call._call_callback('disconnected'),
+            call._close_http_client(),
+        ] + ([call._close_http_client()] * (len(disconnect_calls) - 1))
+
     assert rpc.status is _utils.ConnectionStatus.disconnected
 
 
