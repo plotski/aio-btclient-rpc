@@ -9,6 +9,7 @@ clean:
 	rm -rf .tox
 	rm -rf .coverage .coverage.* htmlcov
 	rm -rf "$(VENV_PATH)" *.egg-info
+	rm -f docs/aiobtclientrpc.rst
 
 venv:
 	"$(PYTHON)" -m venv "$(VENV_PATH)"
