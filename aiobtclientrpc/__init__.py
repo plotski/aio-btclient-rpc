@@ -1,3 +1,7 @@
+"""
+Asynchronous low-level communication with BitTorrent clients
+"""
+
 __project_name__ = 'aio-btclient-rpc'
 __description__ = 'Asynchronous low-level communication with BitTorrent clients'
 __homepage__ = 'https://github.com/plotski/aio-btclient-rpc'
