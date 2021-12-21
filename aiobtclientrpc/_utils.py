@@ -50,9 +50,15 @@ def client(name, *args, **kwargs):
 
 class ConnectionStatus(enum.Enum):
     """Current state of the client connection"""
+
     connecting = 'connecting'
+    """Attempting to connect"""
+
     connected = 'connected'
+    """Connection was established"""
+
     disconnected = 'disconnected'
+    """Connection was either lost or terminated"""
 
 
 def cached_property(fget):
