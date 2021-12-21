@@ -17,8 +17,8 @@ class QbittorrentRPC(_base.RPCBase):
 
     def __init__(
         self,
-        *,
         url=None,
+        *,
         scheme=None,
         host=None,
         port=None,
