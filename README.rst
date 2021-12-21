@@ -9,8 +9,8 @@ Features
 * Keep track of the connection status and provide changes to a callback.
 
 ``aiobtclientrpc`` does not provide any real functionality, e.g. to list or add
-torrents. You need to read the documentation (or source code) of the client you
-want to send commands to.
+torrents. You need to read the documentation of the client you want to send
+commands to.
 
 Documentation: https://aio-btclient-rpc.readthedocs.io/
 
