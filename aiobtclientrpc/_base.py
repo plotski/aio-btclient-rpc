@@ -254,10 +254,17 @@ class RPCBase(abc.ABC):
         If :attr:`status` is not :attr:`.ConnectionStatus.connected`, call
         :meth:`connect` first.
 
-        :raise ConnectionError: if the logout request failed
+        :raise AuthenticationError: if authentication failed
+        :raise ConnectionError: if the request failed
         :raise TimeoutError: if there is no response after :attr:`timeout` seconds
         :raise RPCError: if there is any miscommunication between us and the RPC
             interface
+
+        :return: the return value of the RPC method
+
+            This should be decoded bytes, deserialized JSON, etc. Exceptions
+            from decoding and deserializing should be raised as
+            :class:`~.RPCError`.
         """
         _log.debug('%s: [%s] Calling: %s, %s', self.label, self.status, args, kwargs)
         if self.status is not _utils.ConnectionStatus.connected:
