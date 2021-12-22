@@ -367,8 +367,8 @@ def test_URL_with_auth(url, auth, exp_url):
 def test_URL_equality(url1, url2, exp_equal, mocker):
     if exp_equal is True:
         assert _utils.URL(url1) == _utils.URL(url2)
-        assert _utils.URL(url1) == url2
-        assert url1 == _utils.URL(url2)
+        assert _utils.URL(url1) != url2
+        assert url1 != _utils.URL(url2)
     elif exp_equal is False:
         assert _utils.URL(url1) != _utils.URL(url2)
         assert _utils.URL(url1) != url2
