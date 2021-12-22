@@ -146,6 +146,6 @@ async def test_call(response, exp_exception, exp_return_value, mocker):
         assert return_value is exp_return_value
 
     assert rpc._send_post_request.call_args_list == [call(
-        f'http://foo:123/api/v2/{method}',
+        url=f'http://foo:123/api/v2/{method}',
         data=parameters,
     )]

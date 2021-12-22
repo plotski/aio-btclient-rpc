@@ -67,9 +67,10 @@ class QbittorrentRPC(_base.RPCBase):
         await self._send_post_request(f'{self.url}/api/v2/auth/logout')
 
     async def _call(self, method, **parameters):
-        url = f'{self.url}/api/v2/{method}'
-        _log.debug('Sending POST data to %s: %s: %r', url, method, parameters)
-        response = await self._send_post_request(url, data=parameters)
+        response = await self._send_post_request(
+            url=f'{self.url}/api/v2/{method}',
+            data=parameters,
+        )
 
         if response.status_code == 404:
             raise _errors.RPCError('Unknown RPC method')
