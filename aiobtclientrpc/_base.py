@@ -178,7 +178,23 @@ class RPCBase(abc.ABC):
         return asyncio.Lock()
 
     async def connect(self):
-        """Connect to RPC interface"""
+        """
+        Connect to RPC interface
+
+        Do nothing if :attr:`status` indicates we are already connected.
+
+        It is safe to call this method multiple times concurrently. The first
+        call will actually connect while the remaining calls wait for the first
+        call to finish. If the first call fails, each of the remaining call will
+        become the first call, i.e. it will attempt to connect while the others
+        wait for it.
+
+        :raise AuthenticationError: if authentication failed
+        :raise ConnectionError: if the request failed
+        :raise TimeoutError: if there is no response after :attr:`timeout` seconds
+        :raise RPCError: if there is any miscommunication between us and the RPC
+            interface
+        """
         _log.debug('%s: connect(): Waiting for connection lock (status=%s)', self.label, self.status)
         try:
             async with self._connection_lock:
@@ -216,7 +232,9 @@ class RPCBase(abc.ABC):
 
         It is safe to call this method multiple times concurrently. The first
         call will actually disconnect while the remaining calls wait for the
-        first call to finish.
+        first call to finish. If the first call fails, each of the remaining
+        call will become the first call, i.e. it will attempt to disconnect
+        while the others wait for it.
 
         :attr:`status` is always :attr:`.ConnectionStatus.disconnected` when
         this method returns, regardless of any raised exceptions.
