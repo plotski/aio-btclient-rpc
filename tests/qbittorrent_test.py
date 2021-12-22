@@ -52,6 +52,20 @@ def test_instantiation(kwargs, url):
     assert rpc.timeout == kwargs.get('timeout', _utils.DEFAULT_TIMEOUT)
     assert rpc.proxy_url == kwargs.get('proxy_url', None)
 
+@pytest.mark.parametrize(
+    argnames='kwargs, exp_error',
+    argvalues=(
+        ({'url': 'foo://bar:baz'}, 'Invalid port'),
+        ({'port': (1, 2, 3)}, 'Invalid port'),
+        ({'timeout': 'never'}, 'Invalid timeout'),
+        ({'proxy_url': 'foo://bar:baz'}, 'Invalid port'),
+    ),
+    ids=lambda v: str(v),
+)
+def test_instantiation_with_invalid_argument(kwargs, exp_error):
+    with pytest.raises(_errors.ValueError, match=rf'^{re.escape(exp_error)}$'):
+        _qbittorrent.QbittorrentRPC(**kwargs)
+
 
 @pytest.mark.parametrize('username', (None, '', 'a'))
 @pytest.mark.parametrize('password', (None, '', 'b'))
