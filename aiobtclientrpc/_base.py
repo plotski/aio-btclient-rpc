@@ -212,16 +212,16 @@ class RPCBase(abc.ABC):
         """
         Disconnect from RPC interface
 
-        Do nothing if :attr:`status` indicates we are already connected.
+        Do nothing if :attr:`status` indicates we are already disconnected.
 
         It is safe to call this method multiple times concurrently. The first
-        call will actually disconnect while the remaining calls wait for it to
-        finish before they return.
+        call will actually disconnect while the remaining calls wait for the
+        first call to finish.
 
         :attr:`status` is always :attr:`.ConnectionStatus.disconnected` when
         this method returns, regardless of any raised exceptions.
 
-        :raise ConnectionError: if the logout request failed
+        :raise ConnectionError: if the request failed
         :raise TimeoutError: if there is no response after :attr:`timeout` seconds
         :raise RPCError: if there is any miscommunication between us and the RPC
             interface
