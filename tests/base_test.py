@@ -33,7 +33,7 @@ class MockRPC(_base.RPCBase):
         (0, _base.RPCBase.default_timeout, None),
         (None, _base.RPCBase.default_timeout, None),
         (False, _base.RPCBase.default_timeout, None),
-        ('foo', None, _errors.ValueError('Not a number')),
+        ('foo', None, _errors.ValueError('Invalid timeout')),
     ),
 )
 def test_timeout(timeout, exp_timeout, exp_exception, mocker):

@@ -67,7 +67,7 @@ class RPCBase(abc.ABC):
         try:
             self._timeout = float(timeout) if timeout else self.default_timeout
         except (TypeError, ValueError):
-            raise _errors.ValueError('Not a number')
+            raise _errors.ValueError('Invalid timeout')
         else:
             self._invalidate_http_client()
 
