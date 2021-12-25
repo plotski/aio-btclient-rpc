@@ -6,7 +6,10 @@ class Error(Exception):
 
 
 class RPCError(Error):
-    """Miscommunication with the RPC service, e.g. unknown method called"""
+    """
+    Miscommunication with the RPC service (e.g. unknown method called) or remote
+    error message (e.g. requested information about unknown torrent)
+    """
 
 
 class ConnectionError(Error):
