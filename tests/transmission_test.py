@@ -51,7 +51,7 @@ def test_instantiation(kwargs, url):
 
     assert rpc.url == exp_url
     assert rpc.timeout == kwargs.get('timeout', _utils.DEFAULT_TIMEOUT)
-    assert rpc.proxy_url == kwargs.get('proxy_url', None)
+    assert rpc.proxy_url == (_utils.URL(kwargs['proxy_url']) if 'proxy_url' in kwargs else None)
 
 @pytest.mark.parametrize(
     argnames='kwargs, exp_error',
