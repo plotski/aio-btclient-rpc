@@ -4,7 +4,9 @@ aiobtclientrpc
 .. include:: /../README.rst
 
 .. toctree::
-   usage.rst
+   :hidden:
+
+   usage
 
 Reference
 ---------
