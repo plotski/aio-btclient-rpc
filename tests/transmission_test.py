@@ -81,7 +81,6 @@ def test_instantiation_with_invalid_argument(kwargs, exp_error):
         ('foo', 'hey', {}, None, _errors.ValueError("Tag must be a number: 'hey'")),
         ('foo', None, {'asdf': Exception()}, None,
          _errors.ValueError("Failed to serialize to JSON: "
-                            "Object of type Exception is not JSON serializable: "
                             "{'method': 'foo', 'arguments': {'asdf': Exception()}}")),
     ),
 )

@@ -64,8 +64,8 @@ class TransmissionRPC(_base.RPCBase):
 
         try:
             data_json = json.dumps(data)
-        except Exception as e:
-            raise _errors.ValueError(f'Failed to serialize to JSON: {e}: {data}')
+        except Exception:
+            raise _errors.ValueError(f'Failed to serialize to JSON: {data}')
 
         return await self._send_post_request(str(self.url), data=data_json)
 
