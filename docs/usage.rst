@@ -6,8 +6,11 @@ For each supported BitTorrent client there is a subclass of
 the :meth:`~.aiobtclientrpc.RPCBase.call` method, which takes different
 arguments depending on the client.
 
-It is recommended to use an asynchronous context manager and let
-:meth:`~.aiobtclientrpc.RPCBase.call` connect you automatically.
+It is recommended to use an asynchronous context
+manager. :meth:`~.aiobtclientrpc.RPCBase.call` automatically calls
+:meth:`~.aiobtclientrpc.RPCBase.connect` if required and
+:meth:`~.aiobtclientrpc.RPCBase.disconnect` is called at the end of the context
+manager block.
 
 .. code-block:: python
 
@@ -42,9 +45,10 @@ You can also :meth:`~.aiobtclientrpc.RPCBase.connect` and
     ) as client:
         print(await client.call("app/version"))
 
-All :class:`~.aiobtclientrpc.RPCBase` instances can be re-used as an
-asynchronous context manager. But this may be very inefficient because at least
-two RPC calls are made per context manager.
+:class:`~.aiobtclientrpc.RPCBase` instances can be re-used as asynchronous
+context managers. But this may be very inefficient because of the additional
+calls to :meth:`~.aiobtclientrpc.RPCBase.connect` and
+:meth:`~.aiobtclientrpc.RPCBase.disconnect`.
 
 .. code-block:: python
 
