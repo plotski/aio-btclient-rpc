@@ -12,7 +12,8 @@ Features
 torrents. You need to read the documentation of the client you want to send
 commands to.
 
-Documentation: https://aio-btclient-rpc.readthedocs.io/
+| Documentation: https://aio-btclient-rpc.readthedocs.io/
+| Repository: https://github.com/plotski/aio-btclient-rpc
 
 Supported BitTorrent Clients
 ----------------------------
