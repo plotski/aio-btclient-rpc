@@ -185,9 +185,9 @@ class RPCBase(abc.ABC):
 
         It is safe to call this method multiple times concurrently. The first
         call will actually connect while the remaining calls wait for the first
-        call to finish. If the first call fails, each of the remaining call will
-        become the first call, i.e. it will attempt to connect while the others
-        wait for it.
+        call to finish. If the first call fails, each of the remaining calls
+        will become the first call, i.e. it will attempt to connect while the
+        others wait for it.
 
         :raise AuthenticationError: if authentication failed
         :raise ConnectionError: if the request failed
