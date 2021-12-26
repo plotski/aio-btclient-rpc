@@ -19,17 +19,11 @@ Supported BitTorrent Clients
 
 * `qBittorrent`_
 * `Transmission`_ (daemon)
-
-..
-   * `rTorrent`_
+* `rTorrent`_
 
 .. _qBittorrent: https://www.qbittorrent.org/
 .. _Transmission: https://transmissionbt.com/
-
-
-
-..
-   .. _rTorrent: https://rakshasa.github.io/rtorrent/
+.. _rTorrent: https://rakshasa.github.io/rtorrent/
 
 License
 -------

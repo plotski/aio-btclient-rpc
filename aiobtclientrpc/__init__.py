@@ -12,5 +12,6 @@ __author_email__ = 'plotski@example.org'
 from ._base import RPCBase
 from ._errors import *
 from ._qbittorrent import QbittorrentRPC
+from ._rtorrent import RtorrentRPC
 from ._transmission import TransmissionRPC
 from ._utils import ConnectionStatus, client, clients
