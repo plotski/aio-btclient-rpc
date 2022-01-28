@@ -14,4 +14,4 @@ from ._errors import *
 from ._qbittorrent import QbittorrentRPC
 from ._rtorrent import RtorrentRPC
 from ._transmission import TransmissionRPC
-from ._utils import ConnectionStatus, client, clients
+from ._utils import URL, ConnectionStatus, client, clients
