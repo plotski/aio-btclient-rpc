@@ -40,8 +40,6 @@ function kill_http_server() {
 }
 
 function run_http_server() {
-    config_socket
-
     if [ ! -z "$username" ]; then
         echo "$password" | htpasswd -i -c "$htpasswdfile" "$username"
     else
@@ -90,6 +88,7 @@ elif [[ "$mode" = "scgi" ]]; then
     config_scgi_server
 elif [[ "$mode" = "http" ]]; then
     echo "###### HTTP MODE"
+    config_socket
     run_http_server
 else
     echo "Unknown mode: $mode" >&2
