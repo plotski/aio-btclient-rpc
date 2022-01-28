@@ -8,6 +8,8 @@ class QbittorrentRPC(_base.RPCBase):
     """
     RPC client for qBittorrent
 
+    URL format: http[s]://[USERNAME:PASSWORD@]HOST:PORT
+
     Reference: https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)
 
     :raise ValueError: if any argument is invalid

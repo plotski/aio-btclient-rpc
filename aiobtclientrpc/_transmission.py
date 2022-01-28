@@ -10,6 +10,8 @@ class TransmissionRPC(_base.RPCBase):
     """
     RPC client for Transmission
 
+    URL format: http[s]://[USERNAME:PASSWORD@]HOST:PORT[/PATH]
+
     Reference: https://github.com/transmission/transmission/blob/master/extras/rpc-spec.txt
 
     :raise ValueError: if any argument is invalid
