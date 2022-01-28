@@ -1,7 +1,7 @@
 #!/bin/bash
 
 homedir="$(realpath "$(dirname "$0")")"
-workdir=/tmp/rtorrent
+workdir=/tmp/aiobtclientrpc-transmission
 rpc_port=5000
 source "$(dirname "$homedir")/auth"
 

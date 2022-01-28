@@ -6,7 +6,7 @@ set -o errexit   # Exit if any command fails
 mode="$1"
 
 homedir="$(realpath "$(dirname "$0")")"
-workdir=/tmp/rtorrent
+workdir=/tmp/aiobtclientrpc-rtorrent
 socketfile="$workdir/rpc.socket"
 configfile="$workdir/rtorrent.connection.rc"
 
