@@ -5,9 +5,6 @@ set -o errexit   # Exit if any command fails
 
 mode="$1"
 
-username="fnark"
-password="fnork"
-
 homedir="$(realpath "$(dirname "$0")")"
 workdir=/tmp/rtorrent
 socketfile="$workdir/rpc.socket"
@@ -20,6 +17,8 @@ nginxdir="$(realpath "$(dirname "$0")")/nginx"
 nginxpidfile="$workdir/nginx.pid"
 nginxconfigfile="$workdir/nginx.conf"
 htpasswdfile="$workdir/htpasswd"
+
+source "$(dirname "$homedir")/auth"
 
 mkdir -p "$workdir" "$nginxdir"
 
@@ -98,4 +97,4 @@ fi
 echo "### RTORRENT CONFIG"
 cat $configfile
 
-rtorrent -d "$homedir/downloads" -s "$workdir" -o "import=$configfile" -o "import=$homedir/rtorrent.rc"
+rtorrent -d "$workdir/downloads" -s "$workdir" -o "import=$configfile" -o "import=$homedir/rtorrent.rc"
