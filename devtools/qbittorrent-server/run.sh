@@ -1,5 +1,8 @@
 #!/bin/bash
 
+set -o nounset   # Don't allow unset variables
+set -o errexit   # Exit if any command fails
+
 homedir="$(realpath "$(dirname "$0")")"
 workdir=/tmp/aiobtclientrpc-qbittorrent
 rpc_port=5000
