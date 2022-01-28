@@ -4,7 +4,7 @@ set -o nounset   # Don't allow unset variables
 set -o errexit   # Exit if any command fails
 
 homedir="$(realpath "$(dirname "$0")")"
-workdir=/tmp/aiobtclientrpc-transmission
+workdir=/tmp/transmission.aiobtclientrpc
 rpc_port=5000
 source "$(dirname "$homedir")/auth"
 
