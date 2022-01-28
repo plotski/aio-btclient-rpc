@@ -18,7 +18,8 @@ http_port=5001
 
 nginxdir="$(realpath "$(dirname "$0")")/nginx"
 nginxpidfile="$workdir/nginx.pid"
-htpasswdfile="$nginxdir/htpasswd"
+nginxconfigfile="$workdir/nginx.conf"
+htpasswdfile="$workdir/htpasswd"
 
 mkdir -p "$workdir" "$nginxdir"
 
@@ -46,7 +47,7 @@ function run_http_server() {
         rm -f "$htpasswdfile"
     fi
 
-    cat <<-EOF > "$nginxdir/nginx.conf"
+    cat <<-EOF > "$nginxconfigfile"
 	error_log ${workdir}/nginx.error.log;
 	pid ${nginxpidfile};
 
@@ -64,18 +65,18 @@ function run_http_server() {
 	        auth_basic_user_file ${htpasswdfile};
 
 	        location /RPC2 {
-	           include scgi_params;
+	           include $nginxdir/scgi_params;
 	           scgi_pass unix:${socketfile};
 	        }
 	    }
 	}
 	EOF
 
-    /usr/sbin/nginx -c "$nginxdir/nginx.conf"
+    /usr/sbin/nginx -c "$nginxconfigfile"
     trap kill_http_server EXIT
 
     echo "### NGINX CONFIG"
-    cat $nginxdir/nginx.conf
+    cat $nginxconfigfile
 }
 
 
