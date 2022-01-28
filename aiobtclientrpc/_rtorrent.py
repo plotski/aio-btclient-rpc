@@ -265,7 +265,10 @@ class _ScgiHostTransport(_ScgiTransportBase):
         if url.scheme != 'scgi':
             raise _errors.ValueError(f'Unsupported protocol: {url.scheme}')
         self._host = url.host
-        self._port = int(url.port)
+        if not url.port:
+            raise _errors.ValueError(f'No port specified')
+        else:
+            self._port = int(url.port)
         self._path = (url.path or '/RPC2').encode('utf-8')
         self._proxy_url = proxy_url
 

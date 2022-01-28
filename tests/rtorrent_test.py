@@ -529,6 +529,7 @@ def test_ScgiTransportBase_encode_request(data, path):
     argnames='url, exp_host, exp_port, exp_path, proxy_url, exp_exception',
     argvalues=(
         ('http://foo:123', None, None, None, None, _errors.ValueError('Unsupported protocol: http')),
+        ('scgi://foo', None, None, None, None, _errors.ValueError('No port specified')),
         ('scgi://foo:123', 'foo', 123, b'/RPC2', None, None),
         ('scgi://foo:123/bar', 'foo', 123, b'/bar', None, None),
         ('scgi://foo:123', 'foo', 123, b'/RPC2', 'http://proxy', None),
