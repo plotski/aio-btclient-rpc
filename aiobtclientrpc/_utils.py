@@ -78,11 +78,11 @@ def cached_property(fget):
 
 class URL:
     """
-    URL that is used to locate the RPC interface
+    URL to an RPC interface
 
     This implementation attempts to parse URLs more intuitively instead of
     following any specs. For example ``"localhost:1234"`` is interpreted as
-    ``host=localhost, port=1234`` and not ``scheme=localhost, path=1234``.
+    ``host=localhost, port=1234`` instead of ``scheme=localhost, path=1234``.
 
     :param str default_scheme: Scheme to use when the URL doesn't provide one
         and a host/IP is detected (i.e. it's not a file:// URL)
