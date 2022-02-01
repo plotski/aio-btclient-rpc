@@ -11,10 +11,6 @@ import logging  # isort:skip
 _log = logging.getLogger(__name__)
 
 
-DEFAULT_TIMEOUT = 5.0
-"""Default request timeout in seconds"""
-
-
 def get_aioloop():
     """Return :class:`asyncio.AbstractEventLoop` instance"""
     # https://docs.python.org/3.10/library/asyncio-eventloop.html

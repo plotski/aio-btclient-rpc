@@ -3,7 +3,7 @@ from unittest.mock import Mock, call
 
 import pytest
 
-from aiobtclientrpc import _errors, _transmission, _utils
+from aiobtclientrpc import RPCBase, _errors, _transmission, _utils
 
 
 class AsyncMock(Mock):
@@ -50,7 +50,7 @@ def test_instantiation(kwargs, url):
         setattr(exp_url, name, exp_value)
 
     assert rpc.url == exp_url
-    assert rpc.timeout == kwargs.get('timeout', _utils.DEFAULT_TIMEOUT)
+    assert rpc.timeout == kwargs.get('timeout', RPCBase.default_timeout)
     assert rpc.proxy_url == (_utils.URL(kwargs['proxy_url']) if 'proxy_url' in kwargs else None)
 
 @pytest.mark.parametrize(

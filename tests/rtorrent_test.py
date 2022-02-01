@@ -5,7 +5,7 @@ from unittest.mock import Mock, call
 
 import pytest
 
-from aiobtclientrpc import _errors, _rtorrent, _utils
+from aiobtclientrpc import RPCBase, _errors, _rtorrent, _utils
 
 
 class AsyncMock(Mock):
@@ -64,7 +64,7 @@ def test_RtorrentRPC_instantiation(kwargs, url):
         setattr(exp_url, name, exp_value)
 
     assert rpc.url == exp_url
-    assert rpc.timeout == kwargs.get('timeout', _utils.DEFAULT_TIMEOUT)
+    assert rpc.timeout == kwargs.get('timeout', RPCBase.default_timeout)
     if 'proxy_url' in kwargs:
         assert rpc.proxy_url == _utils.URL(kwargs['proxy_url'])
     else:

@@ -114,7 +114,7 @@ def test_connection_lock():
     argnames='raised_exception, exp_exception',
     argvalues=(
         (None, None),
-        (asyncio.TimeoutError('Timeout'), _errors.TimeoutError(f'Timeout after {_utils.DEFAULT_TIMEOUT} seconds')),
+        (asyncio.TimeoutError('Timeout'), _errors.TimeoutError(f'Timeout after {_base.RPCBase.default_timeout} seconds')),
         (_errors.RPCError('No dice'), _errors.RPCError('No dice')),
         (RuntimeError('Unexpected error'), RuntimeError('Unexpected error')),
     ),
@@ -175,7 +175,7 @@ async def test_connect(raised_exception, exp_exception, mocker):
     argnames='raised_exception, exp_exception',
     argvalues=(
         (None, None),
-        (asyncio.TimeoutError('Timeout'), _errors.TimeoutError(f'Timeout after {_utils.DEFAULT_TIMEOUT} seconds')),
+        (asyncio.TimeoutError('Timeout'), _errors.TimeoutError(f'Timeout after {_base.RPCBase.default_timeout} seconds')),
         (_errors.RPCError('No dice'), _errors.RPCError('No dice')),
         (RuntimeError('Unexpected error'), RuntimeError('Unexpected error')),
     ),
@@ -230,7 +230,7 @@ async def test_disconnect(raised_exception, exp_exception, status, mocker):
         (_utils.ConnectionStatus.connected, [], None, None),
         (_utils.ConnectionStatus.disconnected, [call()], None, None),
         (_utils.ConnectionStatus.connected, [],
-         asyncio.TimeoutError('Timeout'), _errors.TimeoutError(f'Timeout after {_utils.DEFAULT_TIMEOUT} seconds')),
+         asyncio.TimeoutError('Timeout'), _errors.TimeoutError(f'Timeout after {_base.RPCBase.default_timeout} seconds')),
     ),
 )
 @pytest.mark.asyncio
