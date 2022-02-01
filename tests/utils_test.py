@@ -435,17 +435,21 @@ def test_create_http_client(username, password, proxy_url, mocker):
     argvalues=(
         (httpx.HTTPError('Fail'), _errors.ConnectionError('Fail')),
         (httpx_socks.ProxyError('Fail'), _errors.ConnectionError('Fail')),
-        (OSError('Fail'), _errors.ConnectionError('Fail')),
+        (ConnectionAbortedError(), _errors.ConnectionError('Connection aborted')),
+        (ConnectionRefusedError(), _errors.ConnectionError('Connection refused')),
+        (ConnectionResetError(), _errors.ConnectionError('Connection reset')),
         (OSError(123, 'Fail'), _errors.ConnectionError('Fail')),
+        (OSError('Fail'), _errors.ConnectionError('Fail')),
+        (OSError(), _errors.ConnectionError('Unknown error')),
     ),
     ids=lambda v: str(v),
 )
 @pytest.mark.asyncio
-async def test_catch_http_exceptions(raised_exception, exp_exception, mocker):
+async def test_catch_connection_exceptions(raised_exception, exp_exception, mocker):
     coro_function = AsyncMock(side_effect=raised_exception)
     if exp_exception:
         with pytest.raises(type(exp_exception), match=rf'^{re.escape(str(exp_exception))}$'):
-            await _utils.catch_http_exceptions(coro_function())
+            await _utils.catch_connection_exceptions(coro_function())
     else:
-        return_value = await _utils.catch_http_exceptions(coro_function())
+        return_value = await _utils.catch_connection_exceptions(coro_function())
         assert return_value is coro_function.return_value

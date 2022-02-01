@@ -81,7 +81,7 @@ class RtorrentRPC(_base.RPCBase):
 
     async def _call(self, method, *args):
         try:
-            return await _utils.catch_http_exceptions(
+            return await _utils.catch_connection_exceptions(
                 self._xmlrpc_proxy.call(method, *args),
             )
 

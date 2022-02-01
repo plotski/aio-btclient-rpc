@@ -358,7 +358,7 @@ async def test_send_post_request(mocker):
     rpc = MockRPC()
     client = Mock(post=Mock())
     mocker.patch.object(rpc, '_get_http_client', AsyncMock(return_value=client))
-    catch_http_exceptions_mock = mocker.patch('aiobtclientrpc._utils.catch_http_exceptions', AsyncMock())
+    catch_connection_exceptions_mock = mocker.patch('aiobtclientrpc._utils.catch_connection_exceptions', AsyncMock())
     rpc._http_headers['foo'] = 'bar'
 
     return_value = await rpc._send_post_request(
@@ -367,9 +367,9 @@ async def test_send_post_request(mocker):
         files='mock files',
     )
 
-    assert return_value is catch_http_exceptions_mock.return_value
+    assert return_value is catch_connection_exceptions_mock.return_value
     assert rpc._get_http_client.call_args_list == [call()]
-    assert catch_http_exceptions_mock.call_args_list == [call(client.post.return_value)]
+    assert catch_connection_exceptions_mock.call_args_list == [call(client.post.return_value)]
     assert client.post.call_args_list == [call(
         url='mock url',
         headers={'foo': 'bar'},

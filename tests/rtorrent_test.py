@@ -152,9 +152,9 @@ async def test_RtorrentRPC_disconnect(xmlrpc_proxy):
 async def test_RtorrentRPC_call(raised_exception, exp_exception, mocker):
     rpc = _rtorrent.RtorrentRPC()
     rpc._xmlrpc_proxy = Mock(call=Mock())
-    catch_http_exceptions_mock = mocker.patch('aiobtclientrpc._utils.catch_http_exceptions', AsyncMock())
+    catch_connection_exceptions_mock = mocker.patch('aiobtclientrpc._utils.catch_connection_exceptions', AsyncMock())
     if raised_exception:
-        catch_http_exceptions_mock.side_effect = raised_exception
+        catch_connection_exceptions_mock.side_effect = raised_exception
 
     method = 'some_method'
     args = ('foo', 'bar', 'baz')
@@ -164,9 +164,9 @@ async def test_RtorrentRPC_call(raised_exception, exp_exception, mocker):
             await rpc._call(method, *args)
     else:
         return_value = await rpc._call(method, *args)
-        assert return_value is catch_http_exceptions_mock.return_value
+        assert return_value is catch_connection_exceptions_mock.return_value
 
-    assert catch_http_exceptions_mock.call_args_list == [call(rpc._xmlrpc_proxy.call.return_value)]
+    assert catch_connection_exceptions_mock.call_args_list == [call(rpc._xmlrpc_proxy.call.return_value)]
     assert rpc._xmlrpc_proxy.call.call_args_list == [call(method, *args)]
 
 

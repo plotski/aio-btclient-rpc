@@ -312,11 +312,19 @@ def create_http_client(*, auth=(None, None), proxy_url=None):
     return httpx.AsyncClient(**kwargs)
 
 
-async def catch_http_exceptions(coro):
+async def catch_connection_exceptions(coro):
     """
-    Turn HTTP exceptions from `coro` into :class:`~.ConnectionError`
+    Turn exceptions from network requests into :class:`~.ConnectionError`
 
     Proxy exceptions are also caught.
+
+    The error message should be user-friendly.
+
+    :param coro: Awaitable that performs a network request
+
+    :return: return value of `coro`
+
+    :raise ConnectionError: if any relevant exception is raised
     """
     import httpx
     import httpx_socks
@@ -327,8 +335,16 @@ async def catch_http_exceptions(coro):
         raise _errors.ConnectionError(e)
     except httpx_socks.ProxyError as e:
         raise _errors.ConnectionError(e)
+    except ConnectionAbortedError as e:
+        raise _errors.ConnectionError('Connection aborted')
+    except ConnectionRefusedError as e:
+        raise _errors.ConnectionError('Connection refused')
+    except ConnectionResetError as e:
+        raise _errors.ConnectionError('Connection reset')
     except OSError as e:
         # Any low-level exceptions and httpx_socks.ProxyConnectionError, which
         # is a subclass of OSError.
         msg = e.strerror if e.strerror else str(e)
+        if not msg:
+            msg = 'Unknown error'
         raise _errors.ConnectionError(msg)

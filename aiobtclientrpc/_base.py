@@ -353,7 +353,7 @@ class RPCBase(abc.ABC):
 
     async def _send_post_request(self, url, data=None, files=None):
         client = await self._get_http_client()
-        return await _utils.catch_http_exceptions(
+        return await _utils.catch_connection_exceptions(
             client.post(
                 url=url,
                 headers=self._http_headers,
