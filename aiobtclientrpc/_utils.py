@@ -159,28 +159,43 @@ class URL:
     @scheme.setter
     def scheme(self, scheme):
         self._scheme = str(scheme).lower()
+        if self._scheme == 'file':
+            self._host = self._port = self._username = self._password = None
         if self._on_change:
             self._on_change()
 
     @property
     def host(self):
-        """Host name or IP address or `None`"""
+        """
+        Host name or IP address or `None`
+
+        .. note:: This property is always `None` if :attr:`scheme` is
+                  ``"file"``.
+        """
         return self._host
 
     @host.setter
     def host(self, host):
-        self._host = str(host) if host else None
+        if not host or self.scheme == 'file':
+            self._host = None
+        else:
+            self._host = str(host)
         if self._on_change:
             self._on_change()
 
     @property
     def port(self):
-        """Port number or `None`"""
+        """
+        Port number or `None`
+
+        .. note:: This property is always `None` if :attr:`scheme` is
+                  ``"file"``.
+        """
         return self._port
 
     @port.setter
     def port(self, port):
-        if not port:
+        if not port or self.scheme == 'file':
             self._port = None
         else:
             try:
@@ -197,7 +212,7 @@ class URL:
 
     @property
     def path(self):
-        """File system path or request path or None"""
+        """File system path or request path or `None`"""
         return self._path
 
     @path.setter
@@ -208,29 +223,45 @@ class URL:
 
     @property
     def username(self):
-        """Username for authentication"""
+        """
+        Username for authentication
+
+        .. note:: This property is always `None` if :attr:`scheme` is
+                  ``"file"``.
+        """
         return self._username
 
     @username.setter
     def username(self, username):
-        self._username = str(username) if username else None
+        if not username or self.scheme == 'file':
+            self._username = None
+        else:
+            self._username = str(username)
         if self._on_change:
             self._on_change()
 
     @property
     def password(self):
-        """Password for authentication"""
+        """
+        Password for authentication
+
+        .. note:: This property is always `None` if :attr:`scheme` is
+                  ``"file"``.
+        """
         return self._password
 
     @password.setter
     def password(self, password):
-        self._password = str(password) if password else None
+        if not password or self.scheme == 'file':
+            self._password = None
+        else:
+            self._password = str(password)
         if self._on_change:
             self._on_change()
 
     @property
     def without_auth(self):
-        """URL string without username and password"""
+        """URL string without :attr:`username` and :attr:`password`"""
         parts = [self.scheme + '://']
         if self.host:
             parts.append(self.host)
@@ -242,7 +273,7 @@ class URL:
 
     @property
     def with_auth(self):
-        """URL string with username and password"""
+        """URL string with :attr:`username` and :attr:`password`"""
         parts = [self.scheme + '://']
         if self.username and self.password:
             parts.append(f'{self.username}:{self.password}@')
