@@ -46,7 +46,7 @@ class RPCBase(abc.ABC):
 
     # Properties
 
-    default_timeout = 5.0
+    default_timeout = 60.0
     """Default :attr:`timeout`"""
 
     @property
