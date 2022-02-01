@@ -42,16 +42,20 @@ async def run_tests(
             print('>>>>>>', result)
 
         good_call = good_calls[0]
-        print(':::::: Setting wrong URL')
-        correct_port = client.url.port
-        client.url.port = 123
+        correct_url = client.url.with_auth
+        if client.url.scheme == 'file':
+            print(':::::: Setting wrong path')
+            client.url.path = '/no/such/path'
+        else:
+            print(':::::: Setting wrong port')
+            client.url.port = 123
         try:
             print(':::::: YOU SHOULD NOT SEE THIS:', await client.call(*good_call.args, **good_call.kwargs))
         except rpc.ConnectionError as e:
             print(':::::: Expected exception:', repr(e))
         else:
             raise RuntimeError('No ConnectionError raised!')
-        client.url.port = correct_port
+        client.url = correct_url
 
         if client.proxy_url and client.url.scheme != 'file':
             print(':::::: Setting wrong proxy URL')
