@@ -80,7 +80,7 @@ async def run_tests(
         print(':::::: Calling known method:', good_call)
         print('>>>>>>', await client.call(*good_call.args, **good_call.kwargs))
 
-        print(':::::: Reconnecting:', good_call)
+    print(':::::: Reconnecting for', good_call)
     async with client:
         print('>>>>>>', await client.call(*good_call.args, **good_call.kwargs))
 
