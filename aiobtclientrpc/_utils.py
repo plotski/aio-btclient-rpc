@@ -384,11 +384,11 @@ async def catch_connection_exceptions(coro):
         raise _errors.ConnectionError(e)
     except httpx_socks.ProxyError as e:
         raise _errors.ConnectionError(e)
-    except ConnectionAbortedError as e:
+    except ConnectionAbortedError:
         raise _errors.ConnectionError('Connection aborted')
-    except ConnectionRefusedError as e:
+    except ConnectionRefusedError:
         raise _errors.ConnectionError('Connection refused')
-    except ConnectionResetError as e:
+    except ConnectionResetError:
         raise _errors.ConnectionError('Connection reset')
     except OSError as e:
         # Any low-level exceptions and httpx_socks.ProxyConnectionError, which
