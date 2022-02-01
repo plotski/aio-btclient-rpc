@@ -85,17 +85,20 @@ async def run_tests(
         print('>>>>>>', await client.call(*good_call.args, **good_call.kwargs))
 
 
-async def transmission():
+async def transmission(**client_args):
     await run_tests(
         client=rpc.client(
             'transmission',
+
             # url='http://fnark:fnorkfnork@localhost:5000/transmission/rpc',
-            username='fnark',
-            password='fnorkfnork',
-            port=5000,
+            # username='fnark',
+            # password='fnorkfnork',
+            # port=5000,
             # port=1234, timeout=1,
             # proxy_url='socks5://localhost:1234',
             # proxy_url='socks5://localhost:1337',
+
+            **client_args,
         ),
         good_calls=(
             call('session-stats'),
@@ -108,17 +111,20 @@ async def transmission():
         unknown_method='unknown_method',
     )
 
-async def qbittorrent():
+async def qbittorrent(**client_args):
     await run_tests(
         client=rpc.client(
             'qbittorrent',
-            url='http://fnark:fnorkfnork@localhost:5000',
+
+            # url='http://fnark:fnorkfnork@localhost:5000',
             # username='fnark',
             # password='fnorkfnork',
             # port='8081',
             # port=1234, timeout=1,
             # proxy_url='socks5://localhost:1234',
             # proxy_url='socks5://localhost:1337',
+
+            **client_args,
         ),
         good_calls=(
             call('app/version'),
@@ -133,17 +139,20 @@ async def qbittorrent():
         unknown_method='unknown_method',
     )
 
-async def rtorrent():
+async def rtorrent(**client_args):
     await run_tests(
         client=rpc.client(
             'rtorrent',
-            # url='/tmp/rtorrent/rpc.socket',
-            # url='scgi://127.0.0.1:5000',
+
+            # url='/tmp/rtorrent.aiobtclientrpc/rpc.socket',
+            # url='scgi://127.0.0.2:5000',
             # url='scgi://localhost:5000',
-            url='http://localhost:5001',
+            # url='http://localhost:5001',
             # proxy_url='socks5://localhost:1337',
-            username='fnark',
-            password='fnorkfnork',
+            # username='fnark',
+            # password='fnorkfnork',
+
+            **client_args,
         ),
         good_calls=(
             call('directory.default'),
@@ -161,10 +170,22 @@ async def rtorrent():
     )
 
 
-try:
-    client_name = sys.argv[1]
-except IndexError:
-    print('Missing client name', file=sys.stderr)
-else:
-    client_coro = locals()[client_name]
-    asyncio.run(client_coro())
+def parse_args(args):
+    try:
+        client_name = args[0]
+    except IndexError:
+        print('Missing client name', file=sys.stderr)
+        exit(1)
+
+    kwargs = {}
+    for arg in args[1:]:
+        if '=' not in arg:
+            raise ValueError(f'{arg}: Argument syntax is "key=value", e.g. "url=http://localhost:123"')
+        else:
+            name, value = arg.split('=', maxsplit=1)
+            kwargs[name] = value
+    return client_name, kwargs
+
+client_name, client_args = parse_args(sys.argv[1:])
+client_coro = locals()[client_name]
+asyncio.run(client_coro(**client_args))
