@@ -1,3 +1,4 @@
+import asyncio
 import enum
 import inspect
 import os
@@ -12,6 +13,23 @@ _log = logging.getLogger(__name__)
 
 DEFAULT_TIMEOUT = 5.0
 """Default request timeout in seconds"""
+
+
+def get_aioloop():
+    """Return :class:`asyncio.AbstractEventLoop` instance"""
+    # https://docs.python.org/3.10/library/asyncio-eventloop.html
+    try:
+        return asyncio.get_running_loop()
+    except AttributeError:
+        # Python 3.6 doesn't have get_running_loop()
+        return asyncio.get_event_loop()
+    except RuntimeError:
+        # "no running event loop"
+        # We need a loop before the application has started. We can't use
+        # get_event_loop(), because that is going to be an alias for
+        # get_running_loop() in Python >= 3.10. This is what get_event_loop()
+        # does internally in Python 3.6.
+        return asyncio.get_event_loop_policy().get_event_loop()
 
 
 def clients():

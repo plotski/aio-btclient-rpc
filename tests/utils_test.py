@@ -1,3 +1,4 @@
+import asyncio
 import re
 from unittest.mock import Mock, PropertyMock, call
 
@@ -13,6 +14,17 @@ class AsyncMock(Mock):
         async def coro(_sup=super()):
             return _sup.__call__(*args, **kwargs)
         return coro()
+
+
+@pytest.mark.asyncio
+async def test_get_aioloop_with_running_loop(mocker):
+    loop = _utils.get_aioloop()
+    assert loop.is_running()
+    assert isinstance(loop, asyncio.AbstractEventLoop)
+
+def test_get_aioloop_without_running_loop(mocker):
+    loop = _utils.get_aioloop()
+    assert isinstance(loop, asyncio.AbstractEventLoop)
 
 
 def test_clients(mocker):
