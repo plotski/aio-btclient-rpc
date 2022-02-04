@@ -473,6 +473,11 @@ def test_create_http_client(username, password, proxy_url, mocker):
         (OSError(123, 'Fail'), _errors.ConnectionError('Fail')),
         (OSError('Fail'), _errors.ConnectionError('Fail')),
         (OSError(), _errors.ConnectionError('Unknown error')),
+        (OSError("[Errno 123] Error message ('127.0.0.1', 345, 0, 0)"),
+         _errors.ConnectionError('Error message')),
+        (OSError("Multiple exceptions: [Errno 123] Error message ('::1', 456, 0, 0), "
+                 "[Errno 123] Error message ('127.0.0.1', 456)"),
+         _errors.ConnectionError('Error message')),
     ),
     ids=lambda v: str(v),
 )

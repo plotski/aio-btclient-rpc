@@ -392,4 +392,12 @@ async def catch_connection_exceptions(coro):
         msg = e.strerror if e.strerror else str(e)
         if not msg:
             msg = 'Unknown error'
+        else:
+            # Extract actual error, e.g. from
+            # [Errno 111] Connect call failed ('::1', 5001, 0, 0)
+            # Multiple exceptions: [Errno 111] Connect call failed ('::1', 5001, 0, 0),
+            #                      [Errno 111] Connect call failed ('127.0.0.1', 5001)
+            match = re.search(r'\[Errno \d+\]\s*(.*?)\s*(?:\[|\(|$)', msg)
+            if match:
+                msg = match.group(1)
         raise _errors.ConnectionError(msg)
