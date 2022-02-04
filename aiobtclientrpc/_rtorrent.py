@@ -67,8 +67,8 @@ class RtorrentRPC(_base.RPCBase):
 
         # Create new XMLRPC proxy
         self._xmlrpc = _AsyncServerProxy(
-            url=self.url.with_auth,
-            proxy_url=self.proxy_url.with_auth if self.proxy_url else None,
+            url=self.url,
+            proxy_url=self.proxy_url,
         )
 
         # Maybe raise connection/authentication error
@@ -98,16 +98,15 @@ class RtorrentRPC(_base.RPCBase):
 
 class _AsyncServerProxy:
     def __init__(self, url, proxy_url=None):
-        url = _utils.URL(url)
         if url.scheme in ('http', 'https'):
             self._transport = _HttpTransport(
                 url=url,
-                proxy_url=_utils.URL(proxy_url) if proxy_url else None,
+                proxy_url=proxy_url,
             )
         elif url.scheme == 'scgi':
             self._transport = _ScgiHostTransport(
                 url=url,
-                proxy_url=_utils.URL(proxy_url) if proxy_url else None,
+                proxy_url=proxy_url,
             )
         elif url.scheme == 'file' and url.path:
             self._transport = _ScgiSocketTransport(url=url)
@@ -169,7 +168,7 @@ class _HttpTransport(TransportBase):
 
         self._http_client = _utils.create_http_client(
             auth=(url.username, url.password),
-            proxy_url=proxy_url.with_auth if proxy_url else None,
+            proxy_url=proxy_url.with_auth if proxy_url else  None,
         )
 
     async def close(self):

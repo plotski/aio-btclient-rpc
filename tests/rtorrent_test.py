@@ -99,12 +99,12 @@ async def test_RtorrentRPC_connect(proxy_url, mocker):
 
     if proxy_url:
         assert AsyncServerProxy_mock.call_args_list == [call(
-            url=rpc.url.with_auth,
-            proxy_url=proxy_url,
+            url=rpc.url,
+            proxy_url=rpc.proxy_url,
         )]
     else:
         assert AsyncServerProxy_mock.call_args_list == [call(
-            url=rpc.url.with_auth,
+            url=rpc.url,
             proxy_url=None,
         )]
 
@@ -170,15 +170,15 @@ async def test_RtorrentRPC_call(raised_exception, exp_exception, mocker):
     assert rpc._xmlrpc.call.call_args_list == [call(method, *args)]
 
 
-@pytest.mark.parametrize('proxy_url', (None, '', 'http://proxy.local'))
+@pytest.mark.parametrize('proxy_url', (None, _utils.URL('http://proxy.local')))
 @pytest.mark.parametrize(
     argnames='url, exp_transport, exp_exception',
     argvalues=(
-        ('http://foo.local:123', '_HttpTransport', None),
-        ('https://foo.local:123', '_HttpTransport', None),
-        ('scgi://foo.local:123', '_ScgiHostTransport', None),
-        ('file://path/to/socket', '_ScgiSocketTransport', None),
-        ('foo://bar.baz', None, _errors.ValueError('Unsupported protocol: foo://bar.baz')),
+        (_utils.URL('http://foo.local:123'), '_HttpTransport', None),
+        (_utils.URL('https://foo.local:123'), '_HttpTransport', None),
+        (_utils.URL('scgi://foo.local:123'), '_ScgiHostTransport', None),
+        (_utils.URL('file://path/to/socket'), '_ScgiSocketTransport', None),
+        (_utils.URL('foo://bar.baz'), None, _errors.ValueError('Unsupported protocol: foo://bar.baz')),
     ),
     ids=lambda v: str(v),
 )
@@ -196,23 +196,23 @@ def test_AsyncServerProxy(url, exp_transport, exp_exception, proxy_url, mocker):
         proxy = _rtorrent._AsyncServerProxy(url, proxy_url)
         assert proxy._transport is transport_mocks[exp_transport].return_value
 
-        if url.startswith('file://'):
+        if str(url).startswith('file://'):
             assert transport_mocks[exp_transport].call_args_list == [
-                call(url=_utils.URL(url)),
+                call(url=url),
             ]
         elif proxy_url:
             assert transport_mocks[exp_transport].call_args_list == [
-                call(url=_utils.URL(url), proxy_url=_utils.URL(proxy_url)),
+                call(url=url, proxy_url=proxy_url),
             ]
         else:
             assert transport_mocks[exp_transport].call_args_list == [
-                call(url=_utils.URL(url), proxy_url=None),
+                call(url=url, proxy_url=None),
             ]
 
 
 @pytest.mark.asyncio
 async def test_AsyncServerProxy_call(mocker):
-    proxy = _rtorrent._AsyncServerProxy('http://foo.baz')
+    proxy = _rtorrent._AsyncServerProxy(_utils.URL('http://foo.baz'))
 
     dumps_mock = mocker.patch('xmlrpc.client.dumps')
     mocker.patch.object(proxy._transport, 'request', Mock())
@@ -240,7 +240,7 @@ async def test_AsyncServerProxy_call(mocker):
 )
 @pytest.mark.asyncio
 async def test_AsyncServerProxy_parse_response(u_close_return_value, exp_return_value, mocker):
-    proxy = _rtorrent._AsyncServerProxy('http://foo.baz')
+    proxy = _rtorrent._AsyncServerProxy(_utils.URL('http://foo.baz'))
 
     mocks = Mock()
     mocks.u.close.return_value = u_close_return_value
@@ -264,7 +264,7 @@ async def test_AsyncServerProxy_parse_response(u_close_return_value, exp_return_
 
 @pytest.mark.asyncio
 async def test_AsyncServerProxy_close(mocker):
-    proxy = _rtorrent._AsyncServerProxy('http://foo.baz')
+    proxy = _rtorrent._AsyncServerProxy(_utils.URL('http://foo.baz'))
     mocker.patch.object(proxy._transport, 'close', AsyncMock())
     assert proxy._transport.close.call_args_list == []
     await proxy.close()
@@ -274,11 +274,11 @@ async def test_AsyncServerProxy_close(mocker):
 @pytest.mark.parametrize(
     argnames='url, proxy_url, exp_url, exp_exception',
     argvalues=(
-        ('file://path/to/proxy', None, None, _errors.ValueError('Unsupported protocol: file')),
-        ('http://a:b@foo.bar:123', None, 'http://foo.bar:123/RPC2', None),
-        ('http://a:b@foo.bar:123/custom/path', None, 'http://foo.bar:123/custom/path', None),
-        ('http://a:b@foo.bar/path', 'http://a:b@proxy', 'http://foo.bar/path', None),
-        ('https://foo.bar', 'https://proxy', 'https://foo.bar/RPC2', None),
+        (_utils.URL('file://path/to/proxy'), None, None, _errors.ValueError('Unsupported protocol: file')),
+        (_utils.URL('http://a:b@foo.bar:123'), None, 'http://foo.bar:123/RPC2', None),
+        (_utils.URL('http://a:b@foo.bar:123/custom/path'), None, 'http://foo.bar:123/custom/path', None),
+        (_utils.URL('http://a:b@foo.bar/path'), _utils.URL('http://a:b@proxy'), 'http://foo.bar/path', None),
+        (_utils.URL('https://foo.bar'), _utils.URL('https://proxy'), 'https://foo.bar/RPC2', None),
     ),
 )
 def test_HttpTransport(url, proxy_url, exp_url, exp_exception, mocker):
