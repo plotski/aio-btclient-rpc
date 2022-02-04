@@ -111,19 +111,19 @@ async def test_RtorrentRPC_connect(proxy_url, mocker):
     assert rpc._call.call_args_list == [call('system.pid')]
 
 
-@pytest.mark.parametrize('xmlrpc_proxy', (None, AsyncMock()))
+@pytest.mark.parametrize('xmlrpc', (None, AsyncMock()))
 @pytest.mark.asyncio
-async def test_RtorrentRPC_disconnect(xmlrpc_proxy):
+async def test_RtorrentRPC_disconnect(xmlrpc):
     rpc = _rtorrent.RtorrentRPC()
-    if xmlrpc_proxy is not None:
-        rpc._xmlrpc_proxy = xmlrpc_proxy
+    if xmlrpc is not None:
+        rpc._xmlrpc = xmlrpc
 
     await rpc._disconnect()
 
-    if xmlrpc_proxy:
-        assert xmlrpc_proxy.close.call_args_list == [call()]
+    if xmlrpc:
+        assert xmlrpc.close.call_args_list == [call()]
 
-    assert not hasattr(rpc, '_xmlrpc_proxy')
+    assert not hasattr(rpc, '_xmlrpc')
 
 
 @pytest.mark.parametrize(
@@ -151,7 +151,7 @@ async def test_RtorrentRPC_disconnect(xmlrpc_proxy):
 @pytest.mark.asyncio
 async def test_RtorrentRPC_call(raised_exception, exp_exception, mocker):
     rpc = _rtorrent.RtorrentRPC()
-    rpc._xmlrpc_proxy = Mock(call=Mock())
+    rpc._xmlrpc = Mock(call=Mock())
     catch_connection_exceptions_mock = mocker.patch('aiobtclientrpc._utils.catch_connection_exceptions', AsyncMock())
     if raised_exception:
         catch_connection_exceptions_mock.side_effect = raised_exception
@@ -166,8 +166,8 @@ async def test_RtorrentRPC_call(raised_exception, exp_exception, mocker):
         return_value = await rpc._call(method, *args)
         assert return_value is catch_connection_exceptions_mock.return_value
 
-    assert catch_connection_exceptions_mock.call_args_list == [call(rpc._xmlrpc_proxy.call.return_value)]
-    assert rpc._xmlrpc_proxy.call.call_args_list == [call(method, *args)]
+    assert catch_connection_exceptions_mock.call_args_list == [call(rpc._xmlrpc.call.return_value)]
+    assert rpc._xmlrpc.call.call_args_list == [call(method, *args)]
 
 
 @pytest.mark.parametrize('proxy_url', (None, '', 'http://proxy.local'))

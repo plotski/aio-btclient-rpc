@@ -66,7 +66,7 @@ class RtorrentRPC(_base.RPCBase):
         await self._disconnect()
 
         # Create new XMLRPC proxy
-        self._xmlrpc_proxy = _AsyncServerProxy(
+        self._xmlrpc = _AsyncServerProxy(
             url=self.url.with_auth,
             proxy_url=self.proxy_url.with_auth if self.proxy_url else None,
         )
@@ -75,14 +75,14 @@ class RtorrentRPC(_base.RPCBase):
         await self._call('system.pid')
 
     async def _disconnect(self):
-        if hasattr(self, '_xmlrpc_proxy'):
-            await self._xmlrpc_proxy.close()
-            delattr(self, '_xmlrpc_proxy')
+        if hasattr(self, '_xmlrpc'):
+            await self._xmlrpc.close()
+            delattr(self, '_xmlrpc')
 
     async def _call(self, method, *args):
         try:
             return await _utils.catch_connection_exceptions(
-                self._xmlrpc_proxy.call(method, *args),
+                self._xmlrpc.call(method, *args),
             )
 
         except xmlrpc.client.ProtocolError as e:
