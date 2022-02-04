@@ -76,6 +76,8 @@ class TransmissionRPC(_base.RPCBase):
     _csrf_header = 'X-Transmission-Session-Id'
 
     async def _connect(self):
+        # There is no special login procedure, we just make an appropriate
+        # request to get the CSRF header and ensure authentication works
         response = await self._request('session-stats')
 
         if response.status_code == self._csrf_error_code:
