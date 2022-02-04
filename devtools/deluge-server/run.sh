@@ -1,5 +1,11 @@
 #!/bin/bash
 
+if [ "$1" = "--frontend" ]; then
+    frontend=true
+else
+    frontend=false
+fi
+
 set -o nounset   # Don't allow unset variables
 set -o errexit   # Exit if any command fails
 
@@ -80,8 +86,15 @@ cat <<-EOF > "$configdir/hostlist.conf"
 }
 EOF
 
-deluge-gtk --config "$configdir" &
-delugegtk_pid="$!"
+if [ "$frontend" = "true" ]; then
+    deluge-gtk --config "$configdir" &
+    delugegtk_pid="$!"
+else
+    delugegtk_pid="no_such_pid"
+fi
 
 deluged --loglevel info --do-not-daemonize --config "$configdir"
-[ -e "/proc/$delugegtk_pid" ] && kill "$delugegtk_pid"
+
+if [ -e "/proc/$delugegtk_pid" ]; then
+    kill "$delugegtk_pid"
+fi
