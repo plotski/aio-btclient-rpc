@@ -278,9 +278,18 @@ class _ScgiHostTransport(_ScgiTransportBase):
             except ValueError as e:
                 raise _errors.ValueError(e)
             sock = await proxy.connect(dest_host=self._host, dest_port=self._port)
-            reader, writer = await asyncio.open_connection(sock=sock)
+            open_connection_kwargs = {
+                'sock': sock,
+                'server_hostname': self._host,
+            }
+
         else:
-            reader, writer = await asyncio.open_connection(host=self._host, port=self._port)
+            open_connection_kwargs = {
+                'host': self._host,
+                'port': self._port,
+            }
+
+        reader, writer = await asyncio.open_connection(**open_connection_kwargs)
         return reader, writer
 
 
