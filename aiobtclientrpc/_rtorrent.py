@@ -71,7 +71,7 @@ class RtorrentRPC(_base.RPCBase):
             proxy_url=self.proxy_url.with_auth if self.proxy_url else None,
         )
 
-        # Assert everything is working properly
+        # Maybe raise connection/authentication error
         await self._call('system.pid')
 
     async def _disconnect(self):
