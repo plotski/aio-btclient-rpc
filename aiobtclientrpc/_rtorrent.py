@@ -2,8 +2,6 @@ import abc
 import asyncio
 import xmlrpc.client
 
-import python_socks.async_.asyncio
-
 from . import _base, _errors, _utils
 
 import logging  # isort:skip
@@ -273,6 +271,8 @@ class _ScgiHostTransport(_ScgiTransportBase):
 
     async def _get_reader_writer(self):
         if self._proxy_url:
+            import python_socks.async_.asyncio
+
             try:
                 proxy = python_socks.async_.asyncio.Proxy.from_url(self._proxy_url.with_auth)
             except ValueError as e:
