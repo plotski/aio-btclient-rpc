@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import asyncio
+import base64
 import os
 import sys
 
@@ -168,6 +169,12 @@ async def rtorrent(**client_args):
         ),
         unknown_method='unknown_method',
     )
+
+
+def read_torrent_file(filepath):
+    with open(filepath, 'rb') as f:
+        filecontent = f.read()
+    return str(base64.b64encode(filecontent), encoding='ascii')
 
 
 def parse_args(args):
