@@ -110,7 +110,7 @@ async def qbittorrent(**client_args):
         good_calls=(
             call('app/version'),
             call('app/buildInfo'),
-            call('torrents/add', data={
+            call('torrents/add', {
                 'urls': '\n'.join([
                     os.path.abspath('./devtools/setup.torrent'),
                 ]),
@@ -125,8 +125,8 @@ async def qbittorrent(**client_args):
                 ))],
                 data={'savepath': 'somewhere/else', 'paused': 'true'},
             ),
-            call('torrents/info', data={'hashes': '4435ef55af79b350e7b85d5b330a7886a61e3bdf'}),
-            call('torrents/info', data={'hashes': 'd5a34e9eb4709e265f0f03a1c8ab60890dcb94a9|asdf'}),
+            call('torrents/info'),
+            call('torrents/info', hashes='d5a34e9eb4709e265f0f03a1c8ab60890dcb94a9|asdf'),
         ),
         unknown_method='unknown_method',
     )
