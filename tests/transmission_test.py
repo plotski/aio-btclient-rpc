@@ -5,12 +5,7 @@ import pytest
 
 from aiobtclientrpc import RPCBase, _errors, _transmission, _utils
 
-
-class AsyncMock(Mock):
-    def __call__(self, *args, **kwargs):
-        async def coro(_sup=super()):
-            return _sup.__call__(*args, **kwargs)
-        return coro()
+from .common import AsyncMock
 
 
 @pytest.mark.parametrize('url', (None, 'http://a:b@foo:123/custom/path'))

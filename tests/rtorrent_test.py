@@ -7,12 +7,7 @@ import pytest
 
 from aiobtclientrpc import RPCBase, _errors, _rtorrent, _utils
 
-
-class AsyncMock(Mock):
-    def __call__(self, *args, **kwargs):
-        async def coro(_sup=super()):
-            return _sup.__call__(*args, **kwargs)
-        return coro()
+from .common import AsyncMock
 
 
 class AsyncIterator:

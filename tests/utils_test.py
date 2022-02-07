@@ -8,12 +8,7 @@ import pytest
 
 from aiobtclientrpc import __project_name__, __version__, _errors, _utils
 
-
-class AsyncMock(Mock):
-    def __call__(self, *args, **kwargs):
-        async def coro(_sup=super()):
-            return _sup.__call__(*args, **kwargs)
-        return coro()
+from .common import AsyncMock
 
 
 @pytest.mark.asyncio
