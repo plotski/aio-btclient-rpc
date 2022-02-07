@@ -142,23 +142,37 @@ async def test_disconnect():
 
 
 @pytest.mark.parametrize(
-    argnames='method, parameters, response, exp_exception',
+    argnames='method, args, kwargs, exp_params, response, exp_exception',
     argvalues=(
         (
             'some_method',
+            None,
+            {'foo': 'bar'},
             {'foo': 'bar'},
             Mock(json=Mock(side_effect=ValueError()), text='The Error.'),
             _errors.RPCError('Unexpected response: The Error.'),
         ),
         (
             'some_method',
+            None,
+            {'foo': 'bar'},
             {'foo': 'bar'},
             Mock(json=Mock(return_value={'result': 'no success'})),
             _errors.RPCError('No success'),
         ),
         (
             'some_method',
+            None,
             {'foo': 'bar'},
+            {'foo': 'bar'},
+            Mock(json=Mock(return_value={'result': 'success'})),
+            None,
+        ),
+        (
+            'some_method',
+            {'impossible-keyword': 'important value', 'hey': 'HO!'},
+            {'foo': 'bar', 'hey': 'ho'},
+            {'foo': 'bar', 'hey': 'HO!', 'impossible-keyword': 'important value'},
             Mock(json=Mock(return_value={'result': 'success'})),
             None,
         ),
@@ -166,15 +180,15 @@ async def test_disconnect():
     ids=lambda v: str(v),
 )
 @pytest.mark.asyncio
-async def test_call(method, parameters, response, exp_exception, mocker):
+async def test_call(method, args, kwargs, exp_params, response, exp_exception, mocker):
     rpc = _transmission.TransmissionRPC()
     mocker.patch.object(rpc, '_request', AsyncMock(return_value=response))
 
     if exp_exception:
         with pytest.raises(type(exp_exception), match=rf'^{re.escape(str(exp_exception))}$'):
-            await rpc._call(method, **parameters)
+            await rpc._call(method, args=args, **kwargs)
     else:
-        return_value = await rpc._call(method, **parameters)
+        return_value = await rpc._call(method, args=args, **kwargs)
         assert return_value is response.json.return_value
 
-    assert rpc._request.call_args_list == [call(method, **parameters)]
+    assert rpc._request.call_args_list == [call(method, **exp_params)]

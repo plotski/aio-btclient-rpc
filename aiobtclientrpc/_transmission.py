@@ -100,8 +100,10 @@ class TransmissionRPC(_base.RPCBase):
         # Forget CSRF header
         self._http_headers.clear()
 
-    async def _call(self, method, **parameters):
-        response = await self._request(method, **parameters)
+    async def _call(self, method, args=None, **kwargs):
+        if args:
+            kwargs.update(args)
+        response = await self._request(method, **kwargs)
         try:
             result = response.json()
         except Exception:
