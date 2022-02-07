@@ -88,19 +88,7 @@ async def run_tests(
 
 async def transmission(**client_args):
     await run_tests(
-        client=rpc.client(
-            'transmission',
-
-            # url='http://fnark:fnorkfnork@localhost:5000/transmission/rpc',
-            # username='fnark',
-            # password='fnorkfnork',
-            # port=5000,
-            # port=1234, timeout=1,
-            # proxy_url='socks5://localhost:1234',
-            # proxy_url='socks5://localhost:1337',
-
-            **client_args,
-        ),
+        client=rpc.client('transmission', **client_args),
         good_calls=(
             call('session-stats'),
             call('session-get'),
@@ -114,19 +102,7 @@ async def transmission(**client_args):
 
 async def qbittorrent(**client_args):
     await run_tests(
-        client=rpc.client(
-            'qbittorrent',
-
-            # url='http://fnark:fnorkfnork@localhost:5000',
-            # username='fnark',
-            # password='fnorkfnork',
-            # port='8081',
-            # port=1234, timeout=1,
-            # proxy_url='socks5://localhost:1234',
-            # proxy_url='socks5://localhost:1337',
-
-            **client_args,
-        ),
+        client=rpc.client('qbittorrent', **client_args),
         good_calls=(
             call('app/version'),
             call('app/buildInfo'),
@@ -142,19 +118,7 @@ async def qbittorrent(**client_args):
 
 async def rtorrent(**client_args):
     await run_tests(
-        client=rpc.client(
-            'rtorrent',
-
-            # url='/tmp/rtorrent.aiobtclientrpc/rpc.socket',
-            # url='scgi://127.0.0.2:5000',
-            # url='scgi://localhost:5000',
-            # url='http://localhost:5001',
-            # proxy_url='socks5://localhost:1337',
-            # username='fnark',
-            # password='fnorkfnork',
-
-            **client_args,
-        ),
+        client=rpc.client('rtorrent', **client_args),
         good_calls=(
             call('directory.default'),
             call('strings.encryption'),
