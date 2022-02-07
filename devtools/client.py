@@ -92,8 +92,12 @@ async def transmission(**client_args):
         good_calls=(
             call('session-stats'),
             call('session-get'),
-            call('torrent-add', filename=os.path.abspath('./devtools/setup.torrent')),
-            call('torrent-add', filename=os.path.abspath('./devtools/aiobtclientrpc.torrent')),
+            call('torrent-add',
+                 {'download-dir': '/tmp/some/path'},
+                 filename=os.path.abspath('./devtools/setup.torrent'),
+                 paused=True,
+            ),
+            call('torrent-add', metainfo=read_torrent_file('./devtools/aiobtclientrpc.torrent')),
             call('torrent-get', fields=['name']),
             call('torrent-get', ids=['4435ef55af79b350e7b85d5b330a7886a61e3bdf'], fields=['name']),
         ),
@@ -106,12 +110,23 @@ async def qbittorrent(**client_args):
         good_calls=(
             call('app/version'),
             call('app/buildInfo'),
-            call('torrents/add', urls=[
-                os.path.abspath('./devtools/setup.torrent'),
-                os.path.abspath('./devtools/aiobtclientrpc.torrent'),
-            ]),
-            call('torrents/info', hashes='4435ef55af79b350e7b85d5b330a7886a61e3bdf'),
-            call('torrents/info', hashes='d5a34e9eb4709e265f0f03a1c8ab60890dcb94a9|asdf'),
+            call('torrents/add', data={
+                'urls': '\n'.join([
+                    os.path.abspath('./devtools/setup.torrent'),
+                ]),
+                'paused': 'true',
+                'savepath': 'some/path',
+            }),
+            call('torrents/add', files=[
+                ('filename', (
+                    os.path.abspath('./devtools/aiobtclientrpc.torrent'),
+                    open('./devtools/aiobtclientrpc.torrent', 'rb'),
+                    'application/x-bittorrent',
+                ))],
+                data={'savepath': 'somewhere/else', 'paused': 'true'},
+            ),
+            call('torrents/info', data={'hashes': '4435ef55af79b350e7b85d5b330a7886a61e3bdf'}),
+            call('torrents/info', data={'hashes': 'd5a34e9eb4709e265f0f03a1c8ab60890dcb94a9|asdf'}),
         ),
         unknown_method='unknown_method',
     )
@@ -123,13 +138,22 @@ async def rtorrent(**client_args):
             call('directory.default'),
             call('strings.encryption'),
             call('dht.statistics'),
-            call('load.verbose', '', os.path.abspath('./devtools/*.torrent'),
+            call('load.verbose', '',
+                 os.path.abspath('./devtools/setup.torrent'),
+                 # Untie torrent from .torrent file so rtorrent doesn't delete
+                 # it when the torrent is removed.
+                 'd.tied_to_file.set=',
+            ),
+            call('load.raw_start_verbose', '',
+                 open('./devtools/aiobtclientrpc.torrent', 'rb').read(),
                  # Untie torrent from .torrent file so rtorrent doesn't delete
                  # it when the torrent is removed.
                  'd.tied_to_file.set='),
             call('download_list', ''),
             call('d.name', '4435ef55af79b350e7b85d5b330a7886a61e3bdf'),
+            call('d.is_active', '4435ef55af79b350e7b85d5b330a7886a61e3bdf'),
             call('d.name', 'd5a34e9eb4709e265f0f03a1c8ab60890dcb94a9'),
+            call('d.is_active', 'd5a34e9eb4709e265f0f03a1c8ab60890dcb94a9'),
         ),
         unknown_method='unknown_method',
     )
