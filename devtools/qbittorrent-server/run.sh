@@ -8,7 +8,7 @@ workdir=/tmp/qbittorrent.aiobtclientrpc
 rpc_port=5000
 source "$(dirname "$homedir")/auth"
 
-mkdir -p "$workdir/config"
+mkdir -p "$workdir/qBittorrent/config/"
 
 cat <<-EOF > "$workdir/qBittorrent/config/qBittorrent.conf"
 [Preferences]
