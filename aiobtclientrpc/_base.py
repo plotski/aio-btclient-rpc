@@ -1,5 +1,6 @@
 import abc
 import asyncio
+import collections
 
 import async_timeout
 
@@ -296,6 +297,78 @@ class RPCBase(abc.ABC):
         except asyncio.TimeoutError:
             _log.debug('%s: call(): Timeout', self.label)
             raise _errors.TimeoutError(f'Timeout after {self.timeout} seconds')
+
+    # Events
+
+    @_utils.cached_property
+    def _event_handlers(self):
+        return collections.defaultdict(lambda: [])
+
+    async def set_event_handler(self, event, handler):
+        """
+        Call callable on event
+
+        :param event: Name or other identifier of the event (refer to the client
+            documentation for valid values)
+        :param handler: Callable to be called when `event` happens (refer to the
+            client documentation for the call signature)
+
+        If `handler` is already registered for `event`, do nothing.
+
+        :raise NotImplementedError: If the client doesn't support events
+        """
+        assert callable(handler), handler
+
+        if event not in self._event_handlers:
+            await self._subscribe(event)
+
+        if handler not in self._event_handlers[event]:
+            self._event_handlers[event].append(handler)
+            _log.debug('Added handler for event %r: %r', event, handler)
+
+    async def unset_event_handler(self, event, handler):
+        """
+        Stop calling callable on event
+
+        See :meth:`set_event_handler`.
+
+        If `handler` is not registered for `event`, do nothing.
+
+        :raise NotImplementedError: If the client doesn't support events
+
+        :return: return value of the RPC method that registers the event with
+            the client
+        """
+        event_handlers = self._event_handlers[event]
+
+        # Disconnect `handler` from `event`
+        if handler in event_handlers:
+            event_handlers.remove(handler)
+
+        # If there aren't any other handlers for `event`, unsubscribe
+        if not event_handlers:
+            del self._event_handlers[event]
+            await self._unsubscribe(event)
+            _log.debug('Removed handler for event %r: %r', event, handler)
+
+    async def _emit_event(self, event, args=None, kwargs=None):
+        # This function is called by subclasses when they receive an event
+        args = args or ()
+        kwargs = kwargs or {}
+        for handler in self._event_handlers[event]:
+            _log.debug('Handling event %r with %r', event, handler)
+            if asyncio.iscoroutinefunction(handler):
+                await handler(*args, **kwargs)
+            else:
+                handler(*args, **kwargs)
+
+    async def _subscribe(self, event):
+        # Tell the client to send us a certain type of event
+        raise NotImplementedError(f'Events are not supported for {self.label}')
+
+    async def _unsubscribe(self, event):
+        # Tell the client to stop sending us a certain type of event
+        raise NotImplementedError(f'Events are not supported for {self.label}')
 
     # Context manager
 
