@@ -12,6 +12,66 @@ class QbittorrentRPC(_base.RPCBase):
 
     Reference: https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)
 
+    Calling RPC methods
+    ===================
+
+    Passing arguments as keywords:
+
+    >>> call(
+    >>>     "torrents/info",
+    >>>     hashes="|".join([
+    >>>         "d5a34e9eb4709e265f0f03a1c8ab60890dcb94a9",
+    >>>         "4435ef55af79b350e7b85d5b330a7886a61e3bdf",
+    >>>     ]),
+    >>>     sort="size",
+    >>>     limit=20,
+    >>> )
+
+    Passing arguments as dictionary:
+
+    >>> call(
+    >>>     "torrents/info",
+    >>>     {
+    >>>         "hashes": "|".join([
+    >>>             "d5a34e9eb4709e265f0f03a1c8ab60890dcb94a9",
+    >>>             "4435ef55af79b350e7b85d5b330a7886a61e3bdf",
+    >>>         ]),
+    >>>         "sort": "size",
+    >>>         "limit" 20,
+    >>>     },
+    >>> )
+
+    Passing arguments as both keywords and dictionary (keyword values are
+    overloaded by dictionary values):
+
+    >>> call(
+    >>>     "torrents/info",
+    >>>     data={
+    >>>         "hashes": "|".join([
+    >>>             "d5a34e9eb4709e265f0f03a1c8ab60890dcb94a9",
+    >>>             "4435ef55af79b350e7b85d5b330a7886a61e3bdf",
+    >>>         ]),
+    >>>         "sort": "size",
+    >>>     },
+    >>>     limit=20,
+    >>> )
+
+    The ``files`` argument is special. It is used to add torrents:
+
+    >>> call('torrents/add', files=[
+        ('filename', (
+            os.path.abspath('path/to/1.torrent'),
+            open('path/to/1.torrent', 'rb'),
+            'application/x-bittorrent',
+        )),
+        ('filename', (
+            os.path.abspath('path/to/2.torrent'),
+            open('path/to/2.torrent', 'rb'),
+            'application/x-bittorrent',
+        ))],
+        data={'savepath': 'special/download/path', 'paused': 'true'},
+    )
+
     :raise ValueError: if any argument is invalid
     """
 
@@ -68,10 +128,21 @@ class QbittorrentRPC(_base.RPCBase):
     async def _disconnect(self):
         await self._send_post_request(f'{self.url}/api/v2/auth/logout')
 
-    async def _call(self, method, **parameters):
+    async def _call(self, method, data=None, files=None, **kwargs):
+        # Merge dictionary arguments with keyword arguments
+        if data:
+            kwargs.update(data)
+
+        # POST request expects "data" and "files" arguments
+        send_post_request_kwargs = {}
+        if kwargs:
+            send_post_request_kwargs['data'] = kwargs
+        if files:
+            send_post_request_kwargs['files'] = files
+
         response = await self._send_post_request(
             url=f'{self.url}/api/v2/{method}',
-            data=parameters,
+            **send_post_request_kwargs,
         )
 
         if response.status_code == 404:

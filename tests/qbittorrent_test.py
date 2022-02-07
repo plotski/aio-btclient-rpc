@@ -115,6 +115,45 @@ async def test_disconnect(exception, mocker):
 
 
 @pytest.mark.parametrize(
+    argnames='data, files, kwargs, exp_send_post_request_kwargs',
+    argvalues=(
+        (None, None, {}, {}),
+        ({'dict': 'data'}, {}, {},
+         {'data': {'dict': 'data'}}),
+        ({}, {'the': 'files'}, {},
+         {'files': {'the': 'files'}}),
+        ({}, {}, {'kw': 'data'},
+         {'data': {'kw': 'data'}}),
+        ({'dict': 'data'}, {'the': 'files'}, {},
+         {'data': {'dict': 'data'}, 'files': {'the': 'files'}}),
+        ({}, {'the': 'files'}, {'kw': 'data'},
+         {'data': {'kw': 'data'}, 'files': {'the': 'files'}}),
+        ({'dict': 'data', 'more': 'DATA'}, {}, {'kw': 'data', 'more': 'data'},
+         {'data': {'kw': 'data', 'more': 'DATA', 'dict': 'data'}}),
+        ({'dict': 'data', 'more': 'DATA'}, {'the': 'files'}, {'kw': 'data', 'more': 'data'},
+         {'data': {'kw': 'data', 'more': 'DATA', 'dict': 'data'}, 'files': {'the': 'files'}}),
+    ),
+    ids=lambda v: str(v),
+)
+@pytest.mark.asyncio
+async def test_call_merges_arguments(data, files, kwargs, exp_send_post_request_kwargs, mocker):
+    rpc = _qbittorrent.QbittorrentRPC()
+    rpc.url = 'http://a:b@foo:123'
+    method = 'do_this'
+
+    mocker.patch.object(rpc, '_send_post_request', AsyncMock(
+        return_value=Mock(status_code=200, json=Mock(return_value='mock json data')),
+    ))
+
+    return_value = await rpc._call(method, data=data, files=files, **kwargs)
+
+    assert rpc._send_post_request.call_args_list == [call(
+        url=f'http://foo:123/api/v2/{method}',
+        **exp_send_post_request_kwargs,
+    )]
+
+
+@pytest.mark.parametrize(
     argnames='response, exp_exception, exp_return_value',
     argvalues=(
         (Mock(status_code=404), _errors.RPCError('Unknown RPC method'), None),
@@ -125,22 +164,20 @@ async def test_disconnect(exception, mocker):
     ids=lambda v: str(v),
 )
 @pytest.mark.asyncio
-async def test_call(response, exp_exception, exp_return_value, mocker):
+async def test_call_handles_exceptions(response, exp_exception, exp_return_value, mocker):
     rpc = _qbittorrent.QbittorrentRPC()
     rpc.url = 'http://a:b@foo:123'
     method = 'do_this'
-    parameters = {'foo': 'bar'}
 
     mocker.patch.object(rpc, '_send_post_request', AsyncMock(return_value=response))
 
     if exp_exception:
         with pytest.raises(type(exp_exception), match=rf'^{re.escape(str(exp_exception))}$'):
-            await rpc._call(method, **parameters)
+            await rpc._call(method)
     else:
-        return_value = await rpc._call(method, **parameters)
+        return_value = await rpc._call(method)
         assert return_value is exp_return_value
 
     assert rpc._send_post_request.call_args_list == [call(
         url=f'http://foo:123/api/v2/{method}',
-        data=parameters,
     )]
