@@ -166,7 +166,7 @@ class _HttpTransport(TransportBase):
 
         self._http_client = _utils.create_http_client(
             auth=(url.username, url.password),
-            proxy_url=proxy_url.with_auth if proxy_url else  None,
+            proxy_url=proxy_url.with_auth if proxy_url else None,
         )
 
     async def close(self):
