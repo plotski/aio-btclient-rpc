@@ -348,6 +348,7 @@ async def test_emit_event(mocker):
 
 def test_event_handlers(mocker):
     rpc = MockRPC()
+    assert rpc._event_handlers is rpc._event_handlers
 
 
 @pytest.mark.asyncio
