@@ -10,6 +10,8 @@ ignore =
     # missing whitespace after ','
     E231,
     # line too long
+    E401,
+    # multiple imports on one line
     E501,
     # expected 2 blank lines
     E302,
