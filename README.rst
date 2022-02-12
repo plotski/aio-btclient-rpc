@@ -4,13 +4,13 @@ clients.
 Features
 --------
 
-* Take care of opening and closing the connection and authentication.
-* Tunnel the connection through a SOCKS5, SOCKS4 or HTTP proxy.
-* Keep track of the connection status and provide changes to a callback.
+* Connect automatically on first RPC method call
+* Tunnel the client connection through a SOCKS5, SOCKS4 or HTTP proxy
+* Keep track of the connection status and provide changes to a callback
 
-``aiobtclientrpc`` does not provide any real functionality, e.g. to list or add
-torrents. You need to read the documentation of the client you want to send
-commands to.
+``aiobtclientrpc`` does not implement any useful RPC methods, e.g. to get a
+torrent list. You need to read the documentation or source code of the client
+you want to send commands to.
 
 | Documentation: https://aio-btclient-rpc.readthedocs.io/
 | Repository: https://github.com/plotski/aio-btclient-rpc
