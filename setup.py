@@ -39,5 +39,6 @@ setuptools.setup(
         'httpx==0.*,>=0.20.0',
         'httpx-socks==0.7.*',
         'python-socks[asyncio]==2.*',
+        'rencode==1.0.*',
     ],
 )

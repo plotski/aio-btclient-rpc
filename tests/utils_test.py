@@ -23,8 +23,9 @@ def test_get_aioloop_without_running_loop(mocker):
 
 
 def test_clients(mocker):
-    import aiobtclientrpc
+    import aiobtclientrpc  # isort:skip
     assert _utils.clients() == [
+        aiobtclientrpc.DelugeRPC,
         aiobtclientrpc.QbittorrentRPC,
         aiobtclientrpc.RtorrentRPC,
         aiobtclientrpc.TransmissionRPC,

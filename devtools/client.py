@@ -86,6 +86,51 @@ async def run_tests(
         print('>>>>>>', await client.call(*good_call.args, **good_call.kwargs))
 
 
+async def deluge(**client_args):
+    client = rpc.client('deluge', **client_args)
+
+    def handle_torrent_added(*args, **kwargs):
+        print(':::::: [EVENT] Torrent added:', args, kwargs)
+
+    await client.set_event_handler('TorrentAddedEvent', handle_torrent_added)
+
+    await run_tests(
+        client=client,
+        good_calls=(
+            call('core.get_session_status', [
+                'net.sent_bytes',
+                'net.recv_bytes',
+                'disk.disk_blocks_in_use',
+                'dht.dht_allocated_observers',
+                'dht.dht_messages_in',
+                'dht.dht_messages_out',
+            ]),
+            call('daemon.get_method_list'),
+
+            # Add torrents (throws RPCError if they already exist)
+            call(
+                'core.add_torrent_file',
+                filename=os.path.basename('./devtools/setup.torrent'),
+                filedump=read_torrent_file('./devtools/setup.torrent'),
+                options={'add_paused': True},
+            ),
+            call(
+                'core.add_torrent_file',
+                filename=os.path.basename('./devtools/aiobtclientrpc.torrent'),
+                filedump=read_torrent_file('./devtools/aiobtclientrpc.torrent'),
+                options={'add_paused': False},
+            ),
+
+            # Get list of torrent hashes
+            call('core.get_session_state'),
+            # Get torrent by hash
+            call('core.get_torrent_status', '4435ef55af79b350e7b85d5b330a7886a61e3bdf', keys=['name', 'state']),
+            # Get torrent by filter
+            call('core.get_torrents_status', {'state': 'Downloading'}, keys=['name', 'state']),
+        ),
+        unknown_method='unknown_method',
+    )
+
 async def transmission(**client_args):
     await run_tests(
         client=rpc.client('transmission', **client_args),

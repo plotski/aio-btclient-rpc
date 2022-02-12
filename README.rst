@@ -18,10 +18,12 @@ commands to.
 Supported BitTorrent Clients
 ----------------------------
 
+* `Deluge`_
 * `qBittorrent`_
 * `Transmission`_ (daemon)
 * `rTorrent`_
 
+.. _Deluge: https://www.deluge-torrent.org/
 .. _qBittorrent: https://www.qbittorrent.org/
 .. _Transmission: https://transmissionbt.com/
 .. _rTorrent: https://rakshasa.github.io/rtorrent/
