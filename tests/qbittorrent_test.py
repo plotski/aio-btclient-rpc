@@ -145,7 +145,7 @@ async def test_call_merges_arguments(data, files, kwargs, exp_send_post_request_
         return_value=Mock(status_code=200, json=Mock(return_value='mock json data')),
     ))
 
-    return_value = await rpc._call(method, data=data, files=files, **kwargs)
+    await rpc._call(method, data=data, files=files, **kwargs)
 
     assert rpc._send_post_request.call_args_list == [call(
         url=f'http://foo:123/api/v2/{method}',
