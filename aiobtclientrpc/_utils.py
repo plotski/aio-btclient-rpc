@@ -30,7 +30,7 @@ def get_aioloop():
 
 def clients():
     """Return list of :class:`~.RPCBase` subclasses"""
-    import aiobtclientrpc
+    import aiobtclientrpc  # isort:skip
     basecls = aiobtclientrpc.RPCBase
     subclses = set()
     for name, value in inspect.getmembers(aiobtclientrpc):
@@ -332,7 +332,7 @@ def create_http_client(*, auth=(None, None), proxy_url=None):
         either value is falsy, don't do authentication
     :param proxy_url: URL to a SOCKS4, SOCKS5 or HTTP proxy
     """
-    import httpx
+    import httpx  # isort:skip
 
     kwargs = {
         # Because not all transports are HTTP-based, timeouts are produced by
@@ -350,8 +350,7 @@ def create_http_client(*, auth=(None, None), proxy_url=None):
 
     # SOCKS[4|5] or HTTP proxy
     if proxy_url:
-        import httpx_socks
-
+        import httpx_socks  # isort:skip
         kwargs['transport'] = httpx_socks.AsyncProxyTransport.from_url(proxy_url)
 
     return httpx.AsyncClient(**kwargs)
@@ -371,8 +370,7 @@ async def catch_connection_exceptions(coro):
 
     :raise ConnectionError: if any relevant exception is raised
     """
-    import httpx
-    import httpx_socks
+    import httpx, httpx_socks  # isort:skip
 
     try:
         return await coro

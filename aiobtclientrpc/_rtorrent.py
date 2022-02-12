@@ -271,8 +271,7 @@ class _ScgiHostTransport(_ScgiTransportBase):
 
     async def _get_reader_writer(self):
         if self._proxy_url:
-            import python_socks.async_.asyncio
-
+            import python_socks.async_.asyncio  # isort:skip
             try:
                 proxy = python_socks.async_.asyncio.Proxy.from_url(self._proxy_url.with_auth)
             except ValueError as e:
