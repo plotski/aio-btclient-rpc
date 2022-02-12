@@ -425,12 +425,20 @@ class RPCBase(abc.ABC):
         self._status = _utils.ConnectionStatus.disconnected
 
     async def _send_post_request(self, url, data=None, files=None):
+        # httpx wants dictionaries as `data` and everything else as `content`
+        if data is not None and not isinstance(data, dict):
+            content = data
+            data = None
+        else:
+            content = None
+
         client = await self._get_http_client()
         return await _utils.catch_connection_exceptions(
             client.post(
                 url=url,
                 headers=self._http_headers,
                 data=data,
+                content=content,
                 files=files,
             ),
         )

@@ -468,8 +468,18 @@ def test_invalidate_http_client(has_client, exp_http_client_is_invalidated):
     assert rpc.status is _utils.ConnectionStatus.disconnected
 
 
+@pytest.mark.parametrize(
+    argnames='data, exp_kwargs',
+    argvalues=(
+        (None, {'data': None, 'content': None}),
+        ({'foo': 'bar'}, {'data': {'foo': 'bar'}, 'content': None}),
+        (['foo', 'bar'], {'data': None, 'content': ['foo', 'bar']}),
+        ('foo bar', {'data': None, 'content': 'foo bar'}),
+    ),
+    ids=lambda v: str(v),
+)
 @pytest.mark.asyncio
-async def test_send_post_request(mocker):
+async def test_send_post_request(data, exp_kwargs, mocker):
     rpc = MockRPC()
     client = Mock(post=Mock())
     mocker.patch.object(rpc, '_get_http_client', AsyncMock(return_value=client))
@@ -478,7 +488,7 @@ async def test_send_post_request(mocker):
 
     return_value = await rpc._send_post_request(
         url='mock url',
-        data='mock data',
+        data=data,
         files='mock files',
     )
 
@@ -488,6 +498,6 @@ async def test_send_post_request(mocker):
     assert client.post.call_args_list == [call(
         url='mock url',
         headers={'foo': 'bar'},
-        data='mock data',
         files='mock files',
+        **exp_kwargs,
     )]
