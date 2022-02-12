@@ -97,4 +97,5 @@ fi
 echo "### RTORRENT CONFIG"
 cat $configfile
 
+mkdir -p "$workdir/downloads"
 rtorrent -d "$workdir/downloads" -s "$workdir" -o "import=$configfile" -o "import=$homedir/rtorrent.rc"
