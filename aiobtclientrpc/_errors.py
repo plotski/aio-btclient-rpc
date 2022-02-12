@@ -4,6 +4,15 @@ import re
 class Error(Exception):
     """Base class for all exceptions raised by this package"""
 
+    def __eq__(self, other):
+        return (
+            type(self) is type(other)
+            and str(self) == str(other)
+        )
+
+    def __ne__(self, other):
+        return not self.__eq__(other)
+
 
 class RPCError(Error):
     """
