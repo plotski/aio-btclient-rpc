@@ -128,8 +128,7 @@ async def test_connect(responses, exp_exception, mocker):
             await rpc._connect()
         assert rpc._request.call_args_list == [call('session-stats')] * len(responses)
     else:
-        return_value = await rpc._connect()
-        assert return_value is responses[-1]
+        await rpc._connect()
         assert rpc._request.call_args_list == [call('session-stats')] * len(responses)
 
 @pytest.mark.asyncio

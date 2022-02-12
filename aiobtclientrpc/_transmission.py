@@ -103,16 +103,13 @@ class TransmissionRPC(_base.RPCBase):
             _log.debug('Setting CSRF header: %s = %s', self._csrf_header, response.headers[self._csrf_header])
             self._http_headers[self._csrf_header] = response.headers[self._csrf_header]
             # Try again with CSRF header
-            return await self._request('session-stats')
+            await self._request('session-stats')
 
         elif response.status_code == self._auth_error_code:
             raise _errors.AuthenticationError('Authentication failed')
 
         elif response.status_code != 200:
             raise _errors.RPCError('Failed to connect')
-
-        else:
-            return response
 
     async def _disconnect(self):
         # Forget CSRF header
