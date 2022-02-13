@@ -14,8 +14,7 @@ class TransmissionRPC(_base.RPCBase):
 
     Reference: https://github.com/transmission/transmission/blob/master/extras/rpc-spec.txt
 
-    Calling RPC methods
-    ===================
+    **Calling RPC methods**
 
     RPC methods can be called like python functions:
 

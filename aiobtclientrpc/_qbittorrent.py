@@ -12,8 +12,7 @@ class QbittorrentRPC(_base.RPCBase):
 
     Reference: https://github.com/qbittorrent/qBittorrent/wiki/WebUI-API-(qBittorrent-4.1)
 
-    Calling RPC methods
-    ===================
+    **Calling RPC methods**
 
     Passing arguments as keywords:
 
@@ -58,19 +57,25 @@ class QbittorrentRPC(_base.RPCBase):
 
     The ``files`` argument is special. It is used to add torrents:
 
-    >>> call('torrents/add', files=[
-        ('filename', (
-            os.path.abspath('path/to/1.torrent'),
-            open('path/to/1.torrent', 'rb'),
-            'application/x-bittorrent',
-        )),
-        ('filename', (
-            os.path.abspath('path/to/2.torrent'),
-            open('path/to/2.torrent', 'rb'),
-            'application/x-bittorrent',
-        ))],
-        data={'savepath': 'special/download/path', 'paused': 'true'},
-    )
+    >>> call(
+    >>>     'torrents/add',
+    >>>     files=[
+    >>>         ('filename', (
+    >>>             os.path.abspath('path/to/1.torrent'),
+    >>>             open('path/to/1.torrent', 'rb'),
+    >>>             'application/x-bittorrent',
+    >>>         )),
+    >>>         ('filename', (
+    >>>             os.path.abspath('path/to/2.torrent'),
+    >>>             open('path/to/2.torrent', 'rb'),
+    >>>             'application/x-bittorrent',
+    >>>         )),
+    >>>     ],
+    >>>     data={
+    >>>         'savepath': 'special/download/path',
+    >>>         'paused': 'true',
+    >>>     },
+    >>> )
 
     :raise ValueError: if any argument is invalid
     """

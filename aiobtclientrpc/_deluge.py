@@ -18,8 +18,7 @@ class DelugeRPC(_base.RPCBase):
         https://www.rasterbar.com/products/libtorrent/manual-ref.html
         https://git.deluge-torrent.org/deluge/tree/
 
-    RPC methods
-    ===========
+    **RPC methods**
 
     RPC methods are only documented as Deluge code. Look for funtions decorated
     with @export. The RPC method is the module name and the function name
@@ -31,8 +30,7 @@ class DelugeRPC(_base.RPCBase):
     Arguments for RPC methods must be positional/keyword as specified in the
     function's call signature.
 
-    Events
-    ======
+    **Events**
 
     Like RPC methods, events are not properly documented. You can find event
     names by grepping for the class name ``DelugeEvent``. The names of
