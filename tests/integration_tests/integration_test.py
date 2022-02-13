@@ -5,6 +5,7 @@ import aiobtclientrpc
 from . import common
 
 
+@pytest.mark.asyncio
 async def test_authentication_error(api, tmp_path):
     if not api.client.url.username:
         pytest.skip(f'No authentication: {api.client.url}')
@@ -31,6 +32,7 @@ async def test_authentication_error(api, tmp_path):
             await api.perform_simple_request()
 
 
+@pytest.mark.asyncio
 async def test_api_as_context_manager(api, tmp_path):
     for _ in range(3):
         async with api.client:
