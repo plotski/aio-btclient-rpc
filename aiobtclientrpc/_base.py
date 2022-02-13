@@ -335,9 +335,6 @@ class RPCBase(abc.ABC):
         If `handler` is not registered for `event`, do nothing.
 
         :raise NotImplementedError: If the client doesn't support events
-
-        :return: return value of the RPC method that registers the event with
-            the client
         """
         event_handlers = self._event_handlers[event]
 
