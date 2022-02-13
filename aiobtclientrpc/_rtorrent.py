@@ -173,7 +173,7 @@ class _HttpTransport(TransportBase):
         await self._http_client.aclose()
 
     async def request(self, data):
-        async with self._http_client.stream('POST', self._url, data=data) as response:
+        async with self._http_client.stream('POST', self._url, content=data) as response:
             if response.status_code != 200:
                 raise xmlrpc.client.ProtocolError(
                     url=self._url,

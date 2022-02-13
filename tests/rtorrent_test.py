@@ -364,7 +364,7 @@ async def test_HttpTransport_request(url, exp_url, status_code, reason_phrase, h
             assert chunk is exp_chunks.pop(0)
         assert exp_chunks == []
 
-    assert transport._http_client.stream.call_args_list == [call('POST', transport._url, data=mock_data)]
+    assert transport._http_client.stream.call_args_list == [call('POST', transport._url, content=mock_data)]
 
 
 @pytest.mark.asyncio
