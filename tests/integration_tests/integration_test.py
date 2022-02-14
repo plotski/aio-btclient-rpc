@@ -48,14 +48,18 @@ async def test_add_torrents(as_file, paused, api, tmp_path):
         'd5a34e9eb4709e265f0f03a1c8ab60890dcb94a9',
     ])
 
-    return_value = await api.add_torrent_files(
-        torrent_filepaths=(
-            common.get_torrent_filepath(infohashes[0]),
-            common.get_torrent_filepath(infohashes[1]),
-        ),
-        as_file=as_file,
-        paused=False,
-    )
-    assert return_value == infohashes
-    torrent_list = await api.get_torrent_list()
-    assert torrent_list == infohashes
+    try:
+        return_value = await api.add_torrent_files(
+            torrent_filepaths=(
+                common.get_torrent_filepath(infohashes[0]),
+                common.get_torrent_filepath(infohashes[1]),
+            ),
+            as_file=as_file,
+            paused=False,
+        )
+        assert return_value == infohashes
+        torrent_list = await api.get_torrent_list()
+        assert torrent_list == infohashes
+
+    finally:
+        await api.client.disconnect()
