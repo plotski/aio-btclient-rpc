@@ -1,4 +1,3 @@
-import os
 import shlex
 import subprocess
 import textwrap
@@ -40,7 +39,7 @@ def run_http_server(tmp_path):
             stdout=subprocess.PIPE,
             stderr=subprocess.STDOUT
         )
-        assert os.path.exists(htpasswd_path), proc.stdout
+        assert htpasswd_path.exists(), proc.stdout
 
         auth_config = textwrap.dedent(rf'''
             auth_basic "Restricted";

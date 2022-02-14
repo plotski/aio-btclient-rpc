@@ -1,4 +1,3 @@
-import os
 import textwrap
 
 from .. import common
@@ -11,9 +10,8 @@ rpcport = '50200'
 
 
 def get_configpath(home):
-    configpath = os.path.join(home, 'qBittorrent/config/qBittorrent.conf')
-    print(configpath)
-    os.makedirs(os.path.dirname(configpath), exist_ok=True)
+    configpath = home / 'qBittorrent/config/qBittorrent.conf'
+    configpath.parent.mkdir(parents=True, exist_ok=True)
     with open(configpath, 'w') as f:
         f.write(textwrap.dedent(rf'''
         [Preferences]
