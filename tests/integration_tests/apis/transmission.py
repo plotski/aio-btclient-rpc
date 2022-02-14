@@ -1,6 +1,7 @@
 import asyncio
-import base64
 import os
+
+from .. import common
 
 
 class API:
@@ -28,12 +29,6 @@ class API:
     TR_STATUS_SEED_WAIT = 5
     TR_STATUS_SEED = 6
 
-    @staticmethod
-    def _read_torrent_file(filepath):
-        with open(filepath, 'rb') as f:
-            filecontent = f.read()
-        return str(base64.b64encode(filecontent), encoding='ascii')
-
     async def add_torrent_files(self, torrent_filepaths, as_file=True,
                                 download_path='/tmp/some/path', paused=True):
         # Add torrents
@@ -51,7 +46,7 @@ class API:
                 result = await self.client.call(
                     'torrent-add',
                     {'download-dir': download_path},
-                    metainfo=self._read_torrent_file(filepath),
+                    metainfo=common.read_torrent_file(filepath),
                     paused=paused,
                 )
                 print('torrent-add:', result)
