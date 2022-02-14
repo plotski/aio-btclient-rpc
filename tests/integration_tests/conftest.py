@@ -59,7 +59,7 @@ def run_server(info, tmp_path):
     if info['proc'].poll() is None:
         print('Started', info['server_name'], 'successfully')
         # Wait for RPC interface to come up
-        time.sleep(1)
+        time.sleep(2)
 
     # Process should still be running (poll() returns None); otherwise report
     # stdout/stderr
