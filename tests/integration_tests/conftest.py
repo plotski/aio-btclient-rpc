@@ -16,7 +16,7 @@ def _get_server_modules():
     servers_path = os.path.join(os.path.dirname(__file__), 'servers')
     print(servers_path)
 
-    for filepath in os.listdir(servers_path):
+    for filepath in sorted(os.listdir(servers_path)):
         filename = os.path.basename(filepath)
         if not filename.startswith('_') and filename.endswith('.py'):
             module_name = filename[:-len('.py')]
