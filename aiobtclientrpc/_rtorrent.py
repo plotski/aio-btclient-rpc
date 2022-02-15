@@ -164,15 +164,24 @@ class _HttpTransport(TransportBase):
             # Username and password are stored in self._http_client
             self._url = url.without_auth
 
+        self._request_lock = asyncio.Lock()
         self._http_client = _utils.create_http_client(
             auth=(url.username, url.password),
             proxy_url=proxy_url.with_auth if proxy_url else None,
         )
 
     async def close(self):
-        await self._http_client.aclose()
+        async with self._request_lock:
+            await self._http_client.aclose()
 
     async def request(self, data):
+        # TODO: Write unittest for this method
+        async with self._request_lock:
+            aiterator = self._request(data)
+            async for chunk in aiterator:
+                yield chunk
+
+    async def _request(self, data):
         async with self._http_client.stream('POST', self._url, content=data) as response:
             if response.status_code != 200:
                 raise xmlrpc.client.ProtocolError(

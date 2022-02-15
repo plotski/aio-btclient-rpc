@@ -1,3 +1,4 @@
+import asyncio
 import re
 import sys
 import xmlrpc
@@ -290,6 +291,7 @@ def test_HttpTransport(url, proxy_url, exp_url, exp_exception, mocker):
         transport = _rtorrent._HttpTransport(url, proxy_url=proxy_url)
         assert transport._url == exp_url
         assert transport._http_client is create_http_client_mock.return_value
+        assert isinstance(transport._request_lock, asyncio.Lock)
 
         if proxy_url:
             assert create_http_client_mock.call_args_list == [call(
@@ -333,7 +335,7 @@ async def test_HttpTransport_request(url, exp_url, status_code, reason_phrase, h
     )
 
     # IMPORTANT: Tests pass without this, but any exception raised in
-    #            HttpTransport.request() is ignored unless we explicitly raise
+    #            HttpTransport._request() is ignored unless we explicitly raise
     #            it in __aexit__().
     async def __aexit__(self, exc_type=None, exc_value=None, traceback=None):
         if exc_value:
@@ -355,12 +357,12 @@ async def test_HttpTransport_request(url, exp_url, status_code, reason_phrase, h
             headers=headers,
         )
         with pytest.raises(type(exp_exception), match=rf'^{re.escape(str(exp_exception))}$'):
-            async for chunk in transport.request(mock_data):
+            async for chunk in transport._request(mock_data):
                 pass
             assert exp_chunks != []
 
     else:
-        async for chunk in transport.request(mock_data):
+        async for chunk in transport._request(mock_data):
             assert chunk is exp_chunks.pop(0)
         assert exp_chunks == []
 
