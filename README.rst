@@ -5,7 +5,7 @@ Features
 --------
 
 * Connect automatically on first RPC method call
-* Tunnel the client connection through a SOCKS5, SOCKS4 or HTTP proxy
+* Tunnel the client connection through a proxy (SOCKS5, SOCKS4, HTTP tunnel)
 * Keep track of the connection status and provide changes to a callback
 
 ``aiobtclientrpc`` does not implement any useful RPC methods, e.g. to get a
