@@ -45,13 +45,9 @@ def api(request, tmp_path):
 _running_servers = {}
 
 def run_server(info, tmp_path):
-    info['logfile'] = tmp_path / (info['server_name'] + '.stdouterr')
-    print(info['server_name'], 'logs to', info['logfile'])
     info['proc'] = subprocess.Popen(
         shlex.split(info['server_start_cmd']),
         shell=False,
-        stdout=open(info['logfile'], 'w'),
-        stderr=subprocess.STDOUT,
     )
     _running_servers[info['server_name']] = info
 
@@ -64,7 +60,7 @@ def run_server(info, tmp_path):
     # Process should still be running (poll() returns None); otherwise report
     # stdout/stderr
     if info['proc'].poll() is not None:
-        raise RuntimeError(f'Failed to run {info["server_start_cmd"]}:\n' + open(info['logfile'], 'r').read())
+        raise RuntimeError(f'Failed to run {info["server_start_cmd"]}')
 
 
 def kill_server(name):

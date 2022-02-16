@@ -29,15 +29,12 @@ def run_http_server(tmp_path):
     scgi_params_path = http_home / 'scgi_params'
     htpasswd_path = http_home / 'htpasswd'
     socketfile = rtorrent_socket.get_socketpath(tmp_path)
-    stdouterr_path = http_home / 'stdouterr'
 
     if username:
         proc = subprocess.run(
             shlex.split(f'htpasswd -i -c "{htpasswd_path}" "{username}"'),
             text=True,
             input=password,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.STDOUT
         )
         assert htpasswd_path.exists(), proc.stdout
 
@@ -97,8 +94,6 @@ def run_http_server(tmp_path):
     subprocess.Popen(
         ('/usr/sbin/nginx', '-c', nginx_configpath),
         shell=False,
-        stdout=open(stdouterr_path, 'w'),
-        stderr=subprocess.STDOUT,
     )
 
 
