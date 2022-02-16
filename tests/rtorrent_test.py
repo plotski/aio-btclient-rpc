@@ -306,11 +306,46 @@ def test_HttpTransport(url, proxy_url, exp_url, exp_exception, mocker):
 
 
 @pytest.mark.asyncio
-async def test_HttpTransport_close(mocker):
+async def test_HttpTransport_request_and_close(mocker):
     transport = _rtorrent._HttpTransport(_utils.URL('http://foo'))
-    mocker.patch.object(transport._http_client, 'aclose', AsyncMock())
-    await transport.close()
-    assert transport._http_client.aclose.call_args_list == [call()]
+    chunks = ('a', 'b', 'c')
+    delays = (0.1, 0.2, 0.3)
+    aiterator = AsyncIterator(chunks)
+    mocks = Mock(
+        aclose=AsyncMock(),
+        _request=Mock(return_value=aiterator),
+    )
+    mocker.patch.object(transport._http_client, 'aclose', mocks.aclose)
+    mocker.patch.object(transport, '_request', mocks._request)
+
+    async def make_request(data):
+        exp_chunks = list(chunks)
+        my_delays = list(delays)
+        async for x in transport.request(data):
+            assert x == exp_chunks.pop(0)
+            await asyncio.sleep(my_delays.pop(0))
+
+    calls = [
+        make_request('foo'),
+        transport.close(),
+        make_request('bar'),
+        transport.close(),
+        make_request('baz'),
+        transport.close(),
+    ]
+    await asyncio.gather(*calls)
+
+    # Even though each requested chunk is is received after an increasing delay,
+    # and close() calls are not delayed at all, calls should be made in the same
+    # order as they were dispatched.
+    assert mocks.mock_calls == [
+        call._request('foo'),
+        call.aclose(),
+        call._request('bar'),
+        call.aclose(),
+        call._request('baz'),
+        call.aclose(),
+    ]
 
 
 @pytest.mark.parametrize(

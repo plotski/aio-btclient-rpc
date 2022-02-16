@@ -175,7 +175,6 @@ class _HttpTransport(TransportBase):
             await self._http_client.aclose()
 
     async def request(self, data):
-        # TODO: Write unittest for this method
         async with self._request_lock:
             aiterator = self._request(data)
             async for chunk in aiterator:
