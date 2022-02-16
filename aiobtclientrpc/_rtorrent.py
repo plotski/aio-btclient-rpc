@@ -126,7 +126,6 @@ class _AsyncServerProxy:
     async def _parse_response(self, chunks):
         p, u = xmlrpc.client.getparser()
         async for chunk in chunks:
-            _log.debug('Got chunk: %r', chunk)
             p.feed(chunk)
         p.close()
         return_value = u.close()
