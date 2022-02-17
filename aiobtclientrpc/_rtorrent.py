@@ -286,9 +286,7 @@ class _ScgiHostTransport(_ScgiTransportBase):
             sock = await proxy.connect(dest_host=self._host, dest_port=self._port)
             open_connection_kwargs = {
                 'sock': sock,
-                'server_hostname': self._host,
             }
-
         else:
             open_connection_kwargs = {
                 'host': self._host,

@@ -621,7 +621,6 @@ async def test_ScgiHostTransport_get_reader_writer(proxy_url, host, port, except
             assert Proxy_from_url_mock.return_value.connect.call_args_list == [call(dest_host=host, dest_port=port)]
             assert open_connection_mock.call_args_list == [call(
                 sock='mock sock',
-                server_hostname=host,
             )]
         else:
             assert open_connection_mock.call_args_list == [call(
