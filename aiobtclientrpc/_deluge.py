@@ -242,17 +242,20 @@ class _DelugeRPCProtocol(asyncio.Protocol):
         _log.debug('Lost connection: %r', exception)
 
         # Don't leave any ongoing requests hanging
-        request_exception = exception or _errors.ConnectionError('Connection lost')
-        for request in self._requests.values():
-            if not request.future.done():
-                request.future.set_exception(request_exception)
-        self._requests.clear()
+        if self._requests:
+            request_exception = exception or _errors.ConnectionError('Connection lost')
+            _log.debug('Reporting exception to %d ongoing requests: %r',
+                       len(self._requests), request_exception)
+            for request in self._requests.values():
+                if not request.future.done():
+                    request.future.set_exception(request_exception)
+            self._requests.clear()
 
         self.close()
         self._reset_internal_state()
 
         if self._on_connection_lost:
-            self._on_connection_lost(exception)
+            self._on_connection_lost()
 
     def close(self):
         if self._transport:

@@ -438,7 +438,7 @@ def test_DelugeRPCProtocol_connection_lost(exception, exp_exception, on_connecti
     assert protocol.close.call_args_list == [call()]
     assert protocol._reset_internal_state.call_args_list == [call()]
     if on_connection_lost:
-        assert protocol._on_connection_lost.call_args_list == [call(exception)]
+        assert protocol._on_connection_lost.call_args_list == [call()]
 
 
 @pytest.mark.parametrize(
