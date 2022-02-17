@@ -168,7 +168,7 @@ class RPCBase(abc.ABC):
         self._on_disconnected = (callback, args, kwargs)
 
     def _call_connection_callback(self, name):
-        callback, args, kwargs = getattr(self, f'_on_{name}')
+        callback, args, kwargs = getattr(self, f'_on_{name}', (None, (), {}))
         if callback:
             callback(*args, **kwargs)
 

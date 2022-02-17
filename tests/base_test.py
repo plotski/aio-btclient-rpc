@@ -85,17 +85,26 @@ def test_status():
     assert rpc.status is _utils.ConnectionStatus.connected
 
 
+@pytest.mark.parametrize('kwargs', ({}, {'foo': 'bar'}))
+@pytest.mark.parametrize('args', ((), (1, 2, 3)))
 @pytest.mark.parametrize('name', ('connecting', 'connected', 'disconnected'))
-def test_call_connection_callback(name):
+def test_call_connection_callback(name, args, kwargs):
     cb = Mock()
     rpc = MockRPC()
 
     with pytest.raises(AssertionError):
         getattr(rpc, f'on_{name}')('not callable')
 
-    getattr(rpc, f'on_{name}')(cb, 'foo', bar='baz')
+    # Register callback
+    getattr(rpc, f'on_{name}')(cb, *args, **kwargs)
+
+    # Call all available callback
     rpc._call_connection_callback(name)
-    assert cb.call_args_list == [call('foo', bar='baz')]
+    others = [n for n in ('connecting', 'connected', 'disconnected') if n != name]
+    for other in others:
+        rpc._call_connection_callback(other)
+
+    assert cb.call_args_list == [call(*args, **kwargs)]
 
 
 def test_connection_lock():
