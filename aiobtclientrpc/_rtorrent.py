@@ -107,7 +107,10 @@ class _AsyncServerProxy:
                 proxy_url=proxy_url,
             )
         elif url.scheme == 'file' and url.path:
-            self._transport = _ScgiSocketTransport(url=url)
+            if proxy_url:
+                raise _errors.ValueError(f'You cannot use a proxy to connect to {url}')
+            else:
+                self._transport = _ScgiSocketTransport(url=url)
         else:
             raise _errors.ValueError(f'Unsupported protocol: {url}')
 

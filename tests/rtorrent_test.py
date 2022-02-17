@@ -189,21 +189,25 @@ def test_AsyncServerProxy(url, exp_transport, exp_exception, proxy_url, mocker):
         with pytest.raises(type(exp_exception), match=rf'^{re.escape(str(exp_exception))}$'):
             _rtorrent._AsyncServerProxy(url, proxy_url)
     else:
-        proxy = _rtorrent._AsyncServerProxy(url, proxy_url)
-        assert proxy._transport is transport_mocks[exp_transport].return_value
-
-        if str(url).startswith('file://'):
-            assert transport_mocks[exp_transport].call_args_list == [
-                call(url=url),
-            ]
-        elif proxy_url:
-            assert transport_mocks[exp_transport].call_args_list == [
-                call(url=url, proxy_url=proxy_url),
-            ]
+        if str(url).startswith('file://') and proxy_url:
+            with pytest.raises(_errors.ValueError, match=rf'^You cannot use a proxy to connect to {url}$'):
+                _rtorrent._AsyncServerProxy(url, proxy_url)
         else:
-            assert transport_mocks[exp_transport].call_args_list == [
-                call(url=url, proxy_url=None),
-            ]
+            proxy = _rtorrent._AsyncServerProxy(url, proxy_url)
+            assert proxy._transport is transport_mocks[exp_transport].return_value
+
+            if str(url).startswith('file://'):
+                assert transport_mocks[exp_transport].call_args_list == [
+                    call(url=url),
+                ]
+            elif proxy_url:
+                assert transport_mocks[exp_transport].call_args_list == [
+                    call(url=url, proxy_url=proxy_url),
+                ]
+            else:
+                assert transport_mocks[exp_transport].call_args_list == [
+                    call(url=url, proxy_url=None),
+                ]
 
 
 @pytest.mark.asyncio
