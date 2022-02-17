@@ -170,6 +170,8 @@ async def test_connect(raised_exception, exp_exception, mocker):
     argvalues=(
         (None, None),
         (asyncio.TimeoutError('Timeout'), _errors.TimeoutError(f'Timeout after {_base.RPCBase.default_timeout} seconds')),
+        (_errors.ConnectionError('Connection lost'), _errors.ConnectionError('Connection lost')),
+        (_errors.AuthenticationError('Password was changed'), _errors.AuthenticationError('Password was changed')),
         (_errors.RPCError('No dice'), _errors.RPCError('No dice')),
         (RuntimeError('Unexpected error'), RuntimeError('Unexpected error')),
     ),
