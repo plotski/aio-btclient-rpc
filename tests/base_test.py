@@ -86,7 +86,7 @@ def test_status():
 
 
 @pytest.mark.parametrize('name', ('connecting', 'connected', 'disconnected'))
-def test_callback(name):
+def test_call_connection_callback(name):
     cb = Mock()
     rpc = MockRPC()
 
@@ -94,7 +94,7 @@ def test_callback(name):
         getattr(rpc, f'on_{name}')('not callable')
 
     getattr(rpc, f'on_{name}')(cb, 'foo', bar='baz')
-    rpc._call_callback(name)
+    rpc._call_connection_callback(name)
     assert cb.call_args_list == [call('foo', bar='baz')]
 
 
@@ -118,10 +118,10 @@ def test_connection_lock():
 async def test_connect(raised_exception, exp_exception, mocker):
     rpc = MockRPC()
     cbs = Mock()
-    cbs._call_callback = Mock()
+    cbs._call_connection_callback = Mock()
     cbs._connect = AsyncMock()
     cbs._disconnect = AsyncMock()
-    mocker.patch.object(rpc, '_call_callback', cbs._call_callback)
+    mocker.patch.object(rpc, '_call_connection_callback', cbs._call_connection_callback)
     mocker.patch.object(rpc, '_connect', cbs._connect)
     mocker.patch.object(rpc, '_disconnect', cbs._disconnect)
 
@@ -137,24 +137,24 @@ async def test_connect(raised_exception, exp_exception, mocker):
 
     if exp_exception:
         exp_calls_per_connection_attempt = [
-            call._call_callback('connecting'),
+            call._call_connection_callback('connecting'),
             call._connect(),
             call._disconnect(),
-            call._call_callback('disconnected'),
+            call._call_connection_callback('disconnected'),
         ]
         assert cbs.mock_calls == (
             exp_calls_per_connection_attempt
             * (len(connect_calls) - 1)
         ) + [
-            call._call_callback('connecting'),
+            call._call_connection_callback('connecting'),
             call._connect(),
-            call._call_callback('connected'),
+            call._call_connection_callback('connected'),
         ]
     else:
         assert cbs.mock_calls == [
-            call._call_callback('connecting'),
+            call._call_connection_callback('connecting'),
             call._connect(),
-            call._call_callback('connected'),
+            call._call_connection_callback('connected'),
         ]
     assert rpc.status is _utils.ConnectionStatus.connected
 
@@ -182,10 +182,10 @@ async def test_disconnect(raised_exception, exp_exception, status, mocker):
     rpc = MockRPC()
     rpc._status = status
     cbs = Mock()
-    cbs._call_callback = Mock()
+    cbs._call_connection_callback = Mock()
     cbs._disconnect = AsyncMock()
     cbs._close_http_client = AsyncMock()
-    mocker.patch.object(rpc, '_call_callback', cbs._call_callback)
+    mocker.patch.object(rpc, '_call_connection_callback', cbs._call_connection_callback)
     mocker.patch.object(rpc, '_disconnect', cbs._disconnect)
     mocker.patch.object(rpc, '_close_http_client', cbs._close_http_client)
 
@@ -212,7 +212,7 @@ async def test_disconnect(raised_exception, exp_exception, status, mocker):
         # closed).
         assert cbs.mock_calls == [
             call._disconnect(),
-            call._call_callback('disconnected'),
+            call._call_connection_callback('disconnected'),
             call._close_http_client(),
         ] + ([call._close_http_client()] * (len(disconnect_calls) - 1))
 
