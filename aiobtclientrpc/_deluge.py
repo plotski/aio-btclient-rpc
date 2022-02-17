@@ -79,6 +79,7 @@ class DelugeRPC(_base.RPCBase):
             host=self.url.host,
             port=self.url.port,
             timeout=self.timeout,
+            on_connection_lost=self._on_connection_lost,
             proxy_url=self.proxy_url,
             event_handler=self._emit_event,
         )
@@ -88,6 +89,10 @@ class DelugeRPC(_base.RPCBase):
                 password=self.url.password,
             ),
         )
+
+    def _on_connection_lost(self):
+        self._status = _utils.ConnectionStatus.disconnected
+        self._call_connection_callback('disconnected')
 
     async def _disconnect(self):
         if hasattr(self, '_client'):
@@ -112,17 +117,20 @@ class DelugeRPC(_base.RPCBase):
 
 
 class _DelugeRPCClient:
-    def __init__(self, host, port, timeout, proxy_url=None, event_handler=None):
+    def __init__(self, host, port, timeout, proxy_url=None, on_connection_lost=None, event_handler=None):
         self._host = str(host)
         self._port = int(port)
         self._timeout = float(timeout)
+        self._on_connection_lost = on_connection_lost
         self._proxy_url = proxy_url
 
         self._loop = _utils.get_aioloop()
         self._protocol = None
         self._event_handler = event_handler
 
-    def _connection_lost(self, exception):
+    def _connection_lost(self):
+        if self._on_connection_lost:
+            self._on_connection_lost()
         self._protocol = None
 
     def _event_received(self, event_name, args):

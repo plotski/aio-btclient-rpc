@@ -70,6 +70,7 @@ async def test_DelugeRPC_connect(mocker):
         host=rpc.url.host,
         port=rpc.url.port,
         timeout=rpc.timeout,
+        on_connection_lost=rpc._on_connection_lost,
         proxy_url=rpc.proxy_url,
         event_handler=rpc._emit_event,
     )]
@@ -78,6 +79,17 @@ async def test_DelugeRPC_connect(mocker):
         username=rpc.url.username,
         password=rpc.url.password,
     )]
+
+
+def test_DelugeRPC_on_connection_lost():
+    rpc = _deluge.DelugeRPC(url='foo:bar@localhost:123')
+    on_disconnected_cb = Mock()
+    rpc.on_disconnected(on_disconnected_cb, 1, two=3)
+    rpc._status = _utils.ConnectionStatus.connecting
+    assert rpc.status is _utils.ConnectionStatus.connecting
+    rpc._on_connection_lost()
+    assert rpc.status is _utils.ConnectionStatus.disconnected
+    assert on_disconnected_cb.call_args_list == [call(1, two=3)]
 
 
 @pytest.mark.parametrize(
@@ -131,9 +143,10 @@ async def test_DelugeRPC_unsubscribe(mocker):
 
 
 async def test_DelugeRPCClient_connection_lost():
-    client = _deluge._DelugeRPCClient(host='localhost', port=123, timeout=10)
+    client = _deluge._DelugeRPCClient(host='localhost', port=123, timeout=10, on_connection_lost=Mock())
     client._protocol = 'foo'
-    client._connection_lost(Exception('is ignored'))
+    client._connection_lost()
+    assert client._on_connection_lost.call_args_list == [call()]
     assert client._protocol is None
 
 
