@@ -58,7 +58,7 @@ async def test_add_torrents(as_file, paused, api, tmp_path):
                 common.get_torrent_filepath(infohashes[1]),
             ),
             as_file=as_file,
-            paused=False,
+            paused=paused,
         )
         assert return_value == infohashes
         torrent_list = await api.get_torrent_list()
