@@ -129,9 +129,9 @@ class _DelugeRPCClient:
         self._event_handler = event_handler
 
     def _connection_lost(self):
+        self._protocol = None
         if self._on_connection_lost:
             self._on_connection_lost()
-        self._protocol = None
 
     def _event_received(self, event_name, args):
         if asyncio.iscoroutinefunction(self._event_handler):
