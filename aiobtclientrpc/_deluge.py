@@ -92,7 +92,7 @@ class DelugeRPC(_base.RPCBase):
 
     def _on_connection_lost(self):
         self._status = _utils.ConnectionStatus.disconnected
-        self._call_connection_callback('disconnected')
+        self._call_connection_callbacks('disconnected')
 
     async def _disconnect(self):
         if hasattr(self, '_client'):

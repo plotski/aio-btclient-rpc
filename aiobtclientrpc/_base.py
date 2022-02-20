@@ -134,42 +134,84 @@ class RPCBase(abc.ABC):
 
     # Callbacks
 
-    def on_connecting(self, callback, *args, **kwargs):
+    def set_connecting_callback(self, callback, *args, **kwargs):
         """
-        Set callback to call when an attempt to connect to the RPC interface is made
+        Schedule callback to be called when a connection attempt is made
 
         :param callback: Callable to call
 
         All remaining arguments are passed to `callback` when it is called.
         """
         assert callable(callback)
-        self._on_connecting = (callback, args, kwargs)
+        self._connection_callbacks['connecting'].append((callback, args, kwargs))
 
-    def on_connected(self, callback, *args, **kwargs):
+    def unset_connecting_callback(self, callback):
         """
-        Set callback to call when connecting to the RPC interface succeeded
+        Unschedule callback to be called when a connection attempt is made
+
+        :param callback: Callable to call
+        """
+        assert callable(callback)
+        for cb in tuple(self._connection_callbacks['connecting']):
+            if cb[0] == callback:
+                self._connection_callbacks['connecting'].remove(cb)
+
+    def set_connected_callback(self, callback, *args, **kwargs):
+        """
+        Schedule callback to be called when a connection attempt was successful
 
         :param callback: Callable to call
 
         All remaining arguments are passed to `callback` when it is called.
         """
         assert callable(callback)
-        self._on_connected = (callback, args, kwargs)
+        self._connection_callbacks['connected'].append((callback, args, kwargs))
 
-    def on_disconnected(self, callback, *args, **kwargs):
+    def unset_connected_callback(self, callback):
         """
-        Set callback to call when the connection to the RPC interface is lost
+        Unschedule callback to be called when a connection attempt was successful
+
+        :param callback: Callable to call
+        """
+        assert callable(callback)
+        for cb in tuple(self._connection_callbacks['connected']):
+            if cb[0] == callback:
+                self._connection_callbacks['connected'].remove(cb)
+
+    def set_disconnected_callback(self, callback, *args, **kwargs):
+        """
+        Schedule callback to be called when the connection was lost or a connection
+        attempt has failed
 
         :param callback: Callable to call
 
         All remaining arguments are passed to `callback` when it is called.
         """
         assert callable(callback)
-        self._on_disconnected = (callback, args, kwargs)
+        self._connection_callbacks['disconnected'].append((callback, args, kwargs))
 
-    def _call_connection_callback(self, name):
-        callback, args, kwargs = getattr(self, f'_on_{name}', (None, (), {}))
-        if callback:
+    def unset_disconnected_callback(self, callback):
+        """
+        Unschedule callback to be called when the connection was lost or a
+        connection attempt has failed
+
+        :param callback: Callable to call
+        """
+        assert callable(callback)
+        for cb in tuple(self._connection_callbacks['disconnected']):
+            if cb[0] == callback:
+                self._connection_callbacks['disconnected'].remove(cb)
+
+    @_utils.cached_property
+    def _connection_callbacks(self):
+        return {
+            'connecting': [],
+            'connected': [],
+            'disconnected': [],
+        }
+
+    def _call_connection_callbacks(self, name):
+        for callback, args, kwargs in self._connection_callbacks[name]:
             callback(*args, **kwargs)
 
     # RPC methods
@@ -202,7 +244,7 @@ class RPCBase(abc.ABC):
                 _log.debug('%s: connect(): Acquired connection lock (status=%s)', self.label, self.status)
                 if self.status is not _utils.ConnectionStatus.connected:
                     self._status = _utils.ConnectionStatus.connecting
-                    self._call_connection_callback('connecting')
+                    self._call_connection_callbacks('connecting')
                     try:
                         async with async_timeout.timeout(self.timeout):
                             await self._connect()
@@ -211,7 +253,7 @@ class RPCBase(abc.ABC):
                         _log.debug('%s: Failed to connect: %r', self.label, e)
                         await self._disconnect()
                         self._status = _utils.ConnectionStatus.disconnected
-                        self._call_connection_callback('disconnected')
+                        self._call_connection_callbacks('disconnected')
                         if isinstance(e, asyncio.TimeoutError):
                             raise _errors.TimeoutError(f'Timeout after {self.timeout} seconds')
                         else:
@@ -220,7 +262,7 @@ class RPCBase(abc.ABC):
                     else:
                         _log.debug('%s: Connected', self.label)
                         self._status = _utils.ConnectionStatus.connected
-                        self._call_connection_callback('connected')
+                        self._call_connection_callbacks('connected')
 
         finally:
             _log.debug('%s: connect(): Freed connection lock (status=%s)', self.label, self.status)
@@ -260,7 +302,7 @@ class RPCBase(abc.ABC):
 
                     finally:
                         self._status = _utils.ConnectionStatus.disconnected
-                        self._call_connection_callback('disconnected')
+                        self._call_connection_callbacks('disconnected')
 
         finally:
             await self._close_http_client()

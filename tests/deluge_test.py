@@ -83,13 +83,13 @@ async def test_DelugeRPC_connect(mocker):
 
 def test_DelugeRPC_on_connection_lost():
     rpc = _deluge.DelugeRPC(url='foo:bar@localhost:123')
-    on_disconnected_cb = Mock()
-    rpc.on_disconnected(on_disconnected_cb, 1, two=3)
+    disconnected_cb = Mock()
+    rpc.set_disconnected_callback(disconnected_cb, 1, two=3)
     rpc._status = _utils.ConnectionStatus.connecting
     assert rpc.status is _utils.ConnectionStatus.connecting
     rpc._on_connection_lost()
     assert rpc.status is _utils.ConnectionStatus.disconnected
-    assert on_disconnected_cb.call_args_list == [call(1, two=3)]
+    assert disconnected_cb.call_args_list == [call(1, two=3)]
 
 
 @pytest.mark.parametrize(

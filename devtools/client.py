@@ -22,12 +22,12 @@ async def run_tests(
     unknown_method,
 ):
 
-    def cb(client):
+    async def cb():
         print('::: Connection status changed to',  client.status)
 
-    client.on_connecting(cb, client)
-    client.on_connected(cb, client)
-    client.on_disconnected(cb, client)
+    client.set_connecting_callback(cb)
+    client.set_connected_callback(cb)
+    client.set_disconnected_callback(cb)
 
     async with client:
         print(':::::: RPC URL:', client.url)
