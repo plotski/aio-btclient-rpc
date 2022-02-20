@@ -57,28 +57,41 @@ def test_DelugeRPC_instantiation(kwargs, url):
 @pytest.mark.asyncio
 async def test_DelugeRPC_connect(mocker):
     rpc = _deluge.DelugeRPC(url='foo:bar@localhost:123')
-    mocker.patch.object(rpc, '_disconnect', AsyncMock())
-    DelugeRPCClient_mock = mocker.patch('aiobtclientrpc._deluge._DelugeRPCClient', Mock())
-    catch_connection_exceptions_mock = mocker.patch('aiobtclientrpc._utils.catch_connection_exceptions',
-                                                    AsyncMock(return_value='catch_connection_exceptions return value'))
+    mocks = Mock(
+        _disconnect=AsyncMock(),
+        _call=AsyncMock(),
+        _DelugeRPCClient=Mock(),
+        catch_connection_exceptions=AsyncMock(return_value='catch_connection_exceptions return value'),
+    )
+    mocker.patch.object(rpc, '_disconnect', mocks._disconnect)
+    mocker.patch.object(rpc, '_call', mocks._call)
+    mocker.patch('aiobtclientrpc._deluge._DelugeRPCClient', mocks._DelugeRPCClient)
+    mocker.patch('aiobtclientrpc._utils.catch_connection_exceptions', mocks.catch_connection_exceptions)
+
+    rpc._event_handlers['foo'] = Mock()
+    rpc._event_handlers['bar'] = Mock()
 
     await rpc._connect()
 
-    assert rpc._disconnect.call_args_list == [call()]
-    assert rpc._client is DelugeRPCClient_mock.return_value
-    assert DelugeRPCClient_mock.call_args_list == [call(
-        host=rpc.url.host,
-        port=rpc.url.port,
-        timeout=rpc.timeout,
-        on_connection_lost=rpc._on_connection_lost,
-        proxy_url=rpc.proxy_url,
-        event_handler=rpc._emit_event,
-    )]
-    assert catch_connection_exceptions_mock.call_args_list == [call(rpc._client.login.return_value)]
-    assert rpc._client.login.call_args_list == [call(
-        username=rpc.url.username,
-        password=rpc.url.password,
-    )]
+    assert rpc._client is mocks._DelugeRPCClient.return_value
+    assert mocks.mock_calls == [
+        call._disconnect(),
+        call._DelugeRPCClient(
+            host=rpc.url.host,
+            port=rpc.url.port,
+            timeout=rpc.timeout,
+            on_connection_lost=rpc._on_connection_lost,
+            proxy_url=rpc.proxy_url,
+            event_handler=rpc._emit_event,
+        ),
+        call._DelugeRPCClient().login(
+            username=rpc.url.username,
+            password=rpc.url.password,
+        ),
+        call.catch_connection_exceptions(rpc._client.login.return_value),
+        call._call('daemon.set_event_interest', ['foo']),
+        call._call('daemon.set_event_interest', ['bar']),
+    ]
 
 
 def test_DelugeRPC_on_connection_lost():

@@ -90,6 +90,14 @@ class DelugeRPC(_base.RPCBase):
             ),
         )
 
+        # Subscribe to events again
+        for event_name in self._event_handlers:
+            # IMPORTANT: We can't use _subscribe() because it uses
+            # RPCBase.call(), which will see we're not connected yet and acquire
+            # the connection lock to connect. But the connection lock is already
+            # locked until this method returns, resulting in a deadlock.
+            await self._call('daemon.set_event_interest', [event_name])
+
     def _on_connection_lost(self):
         self._status = _utils.ConnectionStatus.disconnected
         self._call_connection_callbacks('disconnected')
