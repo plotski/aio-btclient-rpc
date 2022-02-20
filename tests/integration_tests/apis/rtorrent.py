@@ -92,7 +92,7 @@ class API:
             state = torrent['state']
             assert location == download_path, f'{location!r} != {download_path!r}'
             if paused:
-                assert state == self.STATE_STOPPED, f'{state!r} != {self.STATE_STOPPED!r}'
+                assert state == self.STATE_PAUSED, f'{state!r} != {self.STATE_PAUSED!r}'
             else:
                 assert state == self.STATE_STARTED, f'{state!r} != {self.STATE_STARTED!r}'
 
