@@ -62,3 +62,8 @@ class API:
                 assert torrent['paused'] is False, repr(torrent['paused'])
 
         return sorted(torrents_added)
+
+    async def on_torrent_added(self, handler):
+        def handler_wrapper(infohash, *args, **kwargs):
+            handler(infohash)
+        await self.client.set_event_handler('TorrentAddedEvent', handler_wrapper)

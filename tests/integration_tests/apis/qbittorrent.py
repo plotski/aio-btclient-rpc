@@ -78,3 +78,7 @@ class API:
                 assert status == self.STATUS_DOWNLOADING, f'{status!r} !== {self.STATUS_DOWNLOADING!r}'
 
         return sorted(infohashes)
+
+    async def on_torrent_added(self, handler):
+        # Raise NotImplementedError
+        await self.client.set_event_handler('<event name>', handler)

@@ -97,3 +97,7 @@ class API:
                 assert state == self.STATE_STARTED, f'{state!r} != {self.STATE_STARTED!r}'
 
         return sorted(torrent['hash'].lower() for torrent in torrents)
+
+    async def on_torrent_added(self, handler):
+        # Raise NotImplementedError
+        await self.client.set_event_handler('<event name>', handler)

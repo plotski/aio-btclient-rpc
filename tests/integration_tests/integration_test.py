@@ -1,3 +1,5 @@
+from unittest.mock import Mock, call
+
 import pytest
 
 import aiobtclientrpc
@@ -119,3 +121,37 @@ async def test_proxy(start_proxy, api, tmp_path):
             raise
 
     _log.debug('client is now disconnected')
+
+
+@pytest.mark.asyncio
+async def test_event_subscriptions_survive_reconnecting(api, tmp_path):
+    infohashes = sorted([
+        '4435ef55af79b350e7b85d5b330a7886a61e3bdf',
+        'd5a34e9eb4709e265f0f03a1c8ab60890dcb94a9',
+    ])
+
+    torrent_added_handler = Mock()
+
+    async with api.client:
+        try:
+            await api.on_torrent_added(torrent_added_handler)
+        except NotImplementedError as e:
+            assert str(e) == f'Events are not supported for {api.client.label}'
+            pytest.skip(str(e))
+        else:
+            await api.add_torrent_files(
+                torrent_filepaths=[common.get_torrent_filepath(infohashes[0])],
+            )
+            assert torrent_added_handler.call_args_list == [
+                call(infohashes[0]),
+            ]
+
+    # Re-connect and check if torrent_added_handler() is still called
+    async with api.client:
+        await api.add_torrent_files(
+            torrent_filepaths=[common.get_torrent_filepath(infohashes[1])],
+        )
+        assert torrent_added_handler.call_args_list == [
+            call(infohashes[0]),
+            call(infohashes[1]),
+        ]
