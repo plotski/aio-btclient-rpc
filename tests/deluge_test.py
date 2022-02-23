@@ -13,7 +13,7 @@ from aiobtclientrpc import RPCBase, _deluge, _errors, _utils
 from .common import AsyncMock
 
 
-@pytest.mark.parametrize('url', (None, 'http://a:b@foo:123'))
+@pytest.mark.parametrize('url', (None, 'a:b@foo:123'))
 @pytest.mark.parametrize(
     argnames='kwargs',
     argvalues=(
