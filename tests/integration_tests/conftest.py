@@ -45,10 +45,14 @@ def api(request, tmp_path):
 _running_servers = {}
 
 def run_server(info, tmp_path):
-    info['proc'] = subprocess.Popen(
-        shlex.split(info['server_start_cmd']),
-        shell=False,
-    )
+    try:
+        info['proc'] = subprocess.Popen(
+            shlex.split(info['server_start_cmd']),
+            shell=False,
+        )
+    except FileNotFoundError:
+        pytest.skip(info['server_name'] + ' is not installed')
+
     _running_servers[info['server_name']] = info
 
     # Check if server_start_cmd failed, e.g. due to invalid arguments
