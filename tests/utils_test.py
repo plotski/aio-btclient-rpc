@@ -145,7 +145,7 @@ def test_cached_property():
         (':b@foo:123/path', {'scheme': '{default_scheme}', 'host': 'foo', 'port': '123', 'path': '/path', 'password': 'b'}),
     ),
 )
-@pytest.mark.parametrize('default_scheme', (None, 'asdf'))
+@pytest.mark.parametrize('default_scheme', ('http', 'ftp'))
 def test_URL_with_valid_value(default_scheme, url, exp_parts):
     if default_scheme:
         url = _utils.URL(url, default_scheme=default_scheme)
