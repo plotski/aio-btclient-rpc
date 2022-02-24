@@ -87,94 +87,110 @@ def test_cached_property():
         assert expensive_calculation.call_args_list == [call('a', 'b', c='see')]
 
 
+def make_url_parts(url):
+    return {name: getattr(url, name)
+            for name in ('scheme', 'host', 'port', 'path', 'username', 'password')}
+
 @pytest.mark.parametrize(
-    argnames='url, exp_parts',
+    argnames='url, default_scheme, exp_parts_or_exception',
     argvalues=(
-        # File scheme
-        ('file://rel/path', {'scheme': 'file', 'path': 'rel/path'}),
-        ('file://rel//dirty/..//path/', {'scheme': 'file', 'path': 'rel//dirty/..//path/'}),
-        ('file:///abs/dirty/..//path/', {'scheme': 'file', 'path': '/abs/dirty/..//path/'}),
+        # No scheme without path
+        ('localhost', None,
+         {'scheme': None, 'host': 'localhost', 'port': None, 'path': None, 'username': None, 'password': None}),
+        ('localhost:123', None,
+         {'scheme': None, 'host': 'localhost', 'port': '123', 'path': None, 'username': None, 'password': None}),
+        ('foo:bar@localhost:123', None,
+         {'scheme': None, 'host': 'localhost', 'port': '123', 'path': None, 'username': 'foo', 'password': 'bar'}),
+        ('foo:@localhost:123', None,
+         {'scheme': None, 'host': 'localhost', 'port': '123', 'path': None, 'username': 'foo', 'password': None}),
+        (':bar@localhost:123', None,
+         {'scheme': None, 'host': 'localhost', 'port': '123', 'path': None, 'username': None, 'password': 'bar'}),
+        ('localhost:arf', None,
+         _errors.ValueError('Invalid port')),
 
-        # File scheme with username and/or password
-        ('file://:bar@rel/path', {'scheme': 'file', 'path': ':bar@rel/path'}),
-        ('file://foo:@/abs/path', {'scheme': 'file', 'path': 'foo:@/abs/path'}),
-        ('file://foo:bar@rel/path', {'scheme': 'file', 'path': 'foo:bar@rel/path'}),
+        # No scheme with path
+        ('localhost/some/path', None,
+         {'scheme': None, 'host': 'localhost', 'port': None, 'path': '/some/path', 'username': None, 'password': None}),
+        ('localhost:123/some/path', None,
+         {'scheme': None, 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': None, 'password': None}),
+        ('foo:bar@localhost:123/some/path', None,
+         {'scheme': None, 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': 'foo', 'password': 'bar'}),
+        ('foo:@localhost:123/some/path', None,
+         {'scheme': None, 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': 'foo', 'password': None}),
+        (':bar@localhost:123/some/path', None,
+         {'scheme': None, 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': None, 'password': 'bar'}),
+        ('localhost:arf/some/path', None,
+         _errors.ValueError('Invalid port')),
 
-        # Non-file scheme
-        ('http://foo', {'scheme': 'http', 'host': 'foo'}),
-        ('http://foo/a/path', {'scheme': 'http', 'host': 'foo', 'path': '/a/path'}),
-        ('http://foo//dirty/../path/', {'scheme': 'http', 'host': 'foo', 'path': '/path'}),
-        ('http://foo:123', {'scheme': 'http', 'host': 'foo', 'port': '123'}),
-        ('http://foo:123/a/path', {'scheme': 'http', 'host': 'foo', 'port': '123', 'path': '/a/path'}),
-        ('http://foo:123/dirty/../path/', {'scheme': 'http', 'host': 'foo', 'port': '123', 'path': '/path'}),
+        # Scheme without path
+        ('ftp://localhost', None,
+         {'scheme': 'ftp', 'host': 'localhost', 'port': None, 'path': None, 'username': None, 'password': None}),
+        ('ftp://localhost:123', None,
+         {'scheme': 'ftp', 'host': 'localhost', 'port': '123', 'path': None, 'username': None, 'password': None}),
+        ('ftp://foo:bar@localhost:123', None,
+         {'scheme': 'ftp', 'host': 'localhost', 'port': '123', 'path': None, 'username': 'foo', 'password': 'bar'}),
+        ('ftp://foo:@localhost:123', None,
+         {'scheme': 'ftp', 'host': 'localhost', 'port': '123', 'path': None, 'username': 'foo', 'password': None}),
+        ('ftp://:bar@localhost:123', None,
+         {'scheme': 'ftp', 'host': 'localhost', 'port': '123', 'path': None, 'username': None, 'password': 'bar'}),
+        ('ftp://localhost:arf', None,
+         _errors.ValueError('Invalid port')),
 
-        # Non-file scheme with username and/or password
-        ('http://a:b@foo', {'scheme': 'http', 'host': 'foo', 'username': 'a', 'password': 'b'}),
-        ('http://a:@foo', {'scheme': 'http', 'host': 'foo', 'username': 'a'}),
-        ('http://:b@foo', {'scheme': 'http', 'host': 'foo', 'password': 'b'}),
-        ('http://a:b@foo/z', {'scheme': 'http', 'host': 'foo', 'path': '/z', 'username': 'a', 'password': 'b'}),
-        ('http://a:b@foo:9', {'scheme': 'http', 'host': 'foo', 'port': '9', 'username': 'a', 'password': 'b'}),
-        ('http://a:@foo:9', {'scheme': 'http', 'host': 'foo', 'port': '9', 'username': 'a'}),
-        ('http://:b@foo:9', {'scheme': 'http', 'host': 'foo', 'port': '9', 'password': 'b'}),
-        ('http://a:b@foo:9/z', {'scheme': 'http', 'host': 'foo', 'port': '9', 'path': '/z', 'username': 'a', 'password': 'b'}),
+        # Scheme with path
+        ('http://localhost/some/path', None,
+         {'scheme': 'http', 'host': 'localhost', 'port': None, 'path': '/some/path', 'username': None, 'password': None}),
+        ('http://localhost:123/some/path', None,
+         {'scheme': 'http', 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': None, 'password': None}),
+        ('http://foo:bar@localhost:123/some/path', None,
+         {'scheme': 'http', 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': 'foo', 'password': 'bar'}),
+        ('http://foo:@localhost:123/some/path', None,
+         {'scheme': 'http', 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': 'foo', 'password': None}),
+        ('http://:bar@localhost:123/some/path', None,
+         {'scheme': 'http', 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': None, 'password': 'bar'}),
+        ('http://localhost:arf/some/path', None,
+         _errors.ValueError('Invalid port')),
 
-        # No scheme
-        ('rel/path', {'scheme': 'file', 'path': 'rel/path'}),
-        ('rel//dirty..///path/', {'scheme': 'file', 'path': 'rel//dirty..///path/'}),
-        ('/abs/path', {'scheme': 'file', 'path': '/abs/path'}),
-        ('/abs/dirty//..//path/', {'scheme': 'file', 'path': '/abs/dirty//..//path/'}),
-        ('foo:123', {'scheme': '{default_scheme}', 'host': 'foo', 'port': '123'}),
-        ('foo:123/path', {'scheme': '{default_scheme}', 'host': 'foo', 'port': '123', 'path': '/path'}),
-        ('foo:123/more/path', {'scheme': '{default_scheme}', 'host': 'foo', 'port': '123', 'path': '/more/path'}),
+        # File system path
+        ('file://relative/path', None,
+         {'scheme': 'file', 'host': None, 'port': None, 'path': 'relative/path', 'username': None, 'password': None}),
+        ('file:///absolute/path', None,
+         {'scheme': 'file', 'host': None, 'port': None, 'path': '/absolute/path', 'username': None, 'password': None}),
+        ('file://foo:bar@localhost', None,
+         {'scheme': 'file', 'host': None, 'port': None, 'path': 'foo:bar@localhost', 'username': None, 'password': None}),
+        ('file://localhost:123', None,
+         {'scheme': 'file', 'host': None, 'port': None, 'path': 'localhost:123', 'username': None, 'password': None}),
+        ('file://localhost:arf', None,
+         {'scheme': 'file', 'host': None, 'port': None, 'path': 'localhost:arf', 'username': None, 'password': None}),
+        ('localhost', 'file',
+         {'scheme': 'file', 'host': None, 'port': None, 'path': 'localhost', 'username': None, 'password': None}),
+        ('/absolute/path', None,
+         {'scheme': 'file', 'host': None, 'port': None, 'path': '/absolute/path', 'username': None, 'password': None}),
 
-        # No scheme with username and/or password
-        ('a:b@rel/path', {'scheme': 'file', 'path': 'a:b@rel/path'}),
-        ('a:@rel/path', {'scheme': 'file', 'path': 'a:@rel/path'}),
-        (':b@rel/path', {'scheme': 'file', 'path': ':b@rel/path'}),
-        ('a:b@rel//dirty..///path/', {'scheme': 'file', 'path': 'a:b@rel//dirty..///path/'}),
-        ('a:@rel//dirty..///path/', {'scheme': 'file', 'path': 'a:@rel//dirty..///path/'}),
-        (':b@rel//dirty..///path/', {'scheme': 'file', 'path': ':b@rel//dirty..///path/'}),
-        ('a:b@/rel/path', {'scheme': 'file', 'path': 'a:b@/rel/path'}),
-        ('a:@/rel/path', {'scheme': 'file', 'path': 'a:@/rel/path'}),
-        (':b@/rel/path', {'scheme': 'file', 'path': ':b@/rel/path'}),
-        ('a:b@foo:123', {'scheme': '{default_scheme}', 'host': 'foo', 'port': '123', 'username': 'a', 'password': 'b'}),
-        ('a:@foo:123', {'scheme': '{default_scheme}', 'host': 'foo', 'port': '123', 'username': 'a'}),
-        (':b@foo:123', {'scheme': '{default_scheme}', 'host': 'foo', 'port': '123', 'password': 'b'}),
-        ('a:b@foo:123/path', {'scheme': '{default_scheme}', 'host': 'foo', 'port': '123', 'path': '/path', 'username': 'a', 'password': 'b'}),
-        ('a:@foo:123/path', {'scheme': '{default_scheme}', 'host': 'foo', 'port': '123', 'path': '/path', 'username': 'a'}),
-        (':b@foo:123/path', {'scheme': '{default_scheme}', 'host': 'foo', 'port': '123', 'path': '/path', 'password': 'b'}),
+        # Default scheme
+        ('foo:bar@localhost:123/some/path', 'socks',
+         {'scheme': 'socks', 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': 'foo', 'password': 'bar'}),
+        ('http://foo:bar@localhost:123/some/path', 'socks',
+         {'scheme': 'http', 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': 'foo', 'password': 'bar'}),
     ),
+    ids=lambda v: str(v),
 )
-@pytest.mark.parametrize('default_scheme', ('http', 'ftp'))
-def test_URL_with_valid_value(default_scheme, url, exp_parts):
-    if default_scheme:
-        url = _utils.URL(url, default_scheme=default_scheme)
+def test_URL_with_valid_value(url, default_scheme, exp_parts_or_exception):
+    def make_url(url, default_scheme):
+        if default_scheme:
+            return _utils.URL(url, default_scheme=default_scheme)
+        else:
+            return _utils.URL(url)
+
+    if isinstance(exp_parts_or_exception, Exception):
+        exception = exp_parts_or_exception
+        with pytest.raises(type(exception), match=rf'^{re.escape(str(exception))}$'):
+            make_url(url, default_scheme)
+
     else:
-        url = _utils.URL(url)
-
-    attrnames = ('scheme', 'host', 'port', 'path', 'username', 'password')
-    parts = {
-        name: getattr(url, name)
-        for name in attrnames
-    }
-    exp_parts = {
-        name: exp_parts.get(name, None)
-        for name in attrnames
-    }
-    default_scheme = default_scheme or 'http'
-    exp_parts['scheme'] = exp_parts['scheme'].format(default_scheme=default_scheme)
-    assert parts == exp_parts
-
-@pytest.mark.parametrize(
-    argnames='url, exp_exception',
-    argvalues=(
-        ('http://localhost:65536', _errors.ValueError('Invalid port')),
-        ('http://localhost:hello', _errors.ValueError('Invalid port')),
-    ),
-)
-def test_URL_with_invalid_value(url, exp_exception):
-    with pytest.raises(type(exp_exception), match=rf'^{re.escape(str(exp_exception))}$'):
-        _utils.URL(url)
+        url = make_url(url, default_scheme)
+        exp_parts = exp_parts_or_exception
+        parts = make_url_parts(url)
+        assert parts == exp_parts
 
 
 @pytest.mark.parametrize(

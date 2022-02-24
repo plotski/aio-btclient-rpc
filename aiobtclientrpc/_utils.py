@@ -3,7 +3,6 @@ import enum
 import inspect
 import os
 import re
-import urllib.parse
 
 from . import __project_name__, __version__, _errors
 
@@ -106,63 +105,65 @@ class URL:
     :raise ValueError: if `url` is invalid
     """
 
-    def __init__(self, url, default_scheme='http', on_change=None):
-        url = str(url).strip()
-        if not re.search(r'^[a-zA-Z0-9]+://', url):
-            # Try to autodetect scheme
-            if re.search(
-                (
-                    r'^(?:[a-zA-Z0-9\.]*:[a-zA-Z0-9\.]*@|)'  # Username and password
-                    r'[a-zA-Z0-9\.]+:\d+(?:/|$)'             # Host/IP and port
-                ),
-                url,
-            ):
-                # Looks like hostname/IP and port
-                url = str(default_scheme) + '://' + url
-            else:
-                # Looks like file path
-                url = 'file://' + url
+    _scheme_regex = re.compile(r'^(.*?)://')
+    _auth_regex = re.compile(r'^(.*?):(.*?)@')
+    _host_regex = re.compile(r'^(.*?)(?=/|:|$)')
+    _port_regex = re.compile(r'^:(.*?)(?=/|$)')
 
-        if url.startswith('file://'):
-            # urllib.parse.ursplit() interprets things like port and
-            # username/password for file:// URLs
-            parsed = {
-                'scheme': 'file',
-                'hostname': None,
-                'port': None,
-                'path': url.split('://', maxsplit=1)[1],
-                'username': None,
-                'password': None,
-            }
+    def __init__(self, url, default_scheme=None, on_change=None):
+        # Don't trigger any changes until we finished parsing the initial value
+        self._on_change = None
+
+        # Set defaults
+        self._scheme = str(default_scheme) if default_scheme else None
+        self._username = None
+        self._password = None
+        self._host = None
+        self._port = None
+        self._path = None
+
+        url = str(url).strip()
+
+        # Scheme
+        match = self._scheme_regex.search(url)
+        if match:
+            self.scheme = match.group(1)
+            url = self._scheme_regex.sub('', url)
+        elif default_scheme:
+            self.scheme = default_scheme
+
+        # Assume file system path if URL starts with path separator
+        if self.scheme is None and url.startswith(os.sep):
+            self.scheme = 'file'
+
+        # File system paths don't have authentication, port, etc
+        if self.scheme == 'file':
+            self.path = url
 
         else:
-            split_result = urllib.parse.urlsplit(url)
+            # Authentication
+            match = self._auth_regex.search(url)
+            if match:
+                self.username = match.group(1)
+                self.password = match.group(2)
+                url = self._auth_regex.sub('', url)
 
-            # Translate ValueError from invalid port
-            try:
-                split_result.port
-            except ValueError:
-                raise _errors.ValueError('Invalid port')
+            # Host
+            match = self._host_regex.search(url)
+            if match:
+                self.host = match.group(1)
+                url = self._host_regex.sub('', url)
 
-            # Convert SplitResult to dictionary to make it mutable
-            parsed = {
-                key: str(getattr(split_result, key)) if getattr(split_result, key) else None
-                for key in ('scheme', 'hostname', 'port', 'path', 'username', 'password')
-            }
+            # Port
+            match = self._port_regex.search(url)
+            if match:
+                self.port = match.group(1)
+                url = self._port_regex.sub('', url)
 
-            # Normalize non-file path (normalizing file path can change its
-            # meaning if it contains a symbolic link)
-            if parsed['path']:
-                parsed['path'] = '/' + os.path.normpath(parsed['path']).lstrip('/')
+            # Path
+            self.path = url
 
-        # Don't call callback during initialization
-        self._on_change = None
-        self.scheme = parsed['scheme']
-        self.host = parsed['hostname']
-        self.port = parsed['port']
-        self.path = parsed['path']
-        self.username = parsed['username']
-        self.password = parsed['password']
+        # Parsing is complete, enable on_change callback
         self._on_change = on_change
 
     @property
