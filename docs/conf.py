@@ -1,6 +1,3 @@
-import os
-import sys
-
 extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.autosummary',
