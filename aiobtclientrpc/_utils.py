@@ -173,9 +173,17 @@ class URL:
 
     @scheme.setter
     def scheme(self, scheme):
-        self._scheme = str(scheme).lower()
-        if self._scheme == 'file':
-            self._host = self._port = self._username = self._password = None
+        if not scheme:
+            self._scheme = None
+        else:
+            self._scheme = str(scheme).lower()
+
+            if self._scheme == 'file':
+                parts = (self._username, ':', self._password, '@',
+                         self._host, ':', self._port, self._path)
+                self._path = ''.join((part for part in parts if part))
+                self._host = self._port = self._username = self._password = None
+
         if self._on_change:
             self._on_change()
 

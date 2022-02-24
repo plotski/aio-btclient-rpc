@@ -194,33 +194,35 @@ def test_URL_with_valid_value(url, default_scheme, exp_parts_or_exception):
 
 
 @pytest.mark.parametrize(
-    argnames='url, scheme, exp_attrs',
+    argnames='url, new_scheme, exp_before, exp_after',
     argvalues=(
-        ('this://a:b@localhost:555/some/path', 'http',
-         {'scheme': 'http', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
-        ('this://a:b@localhost:555/some/path', 'Http',
-         {'scheme': 'http', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
-        ('this://a:b@localhost:555/some/path', 'HTTP',
-         {'scheme': 'http', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
-        ('this://a:b@localhost:555/some/path', 'Socks5',
+        ('this://a:b@localhost:555/some/path', 'that',
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'that', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
+        ('this://a:b@localhost:555/some/path', 'THAT',
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'that', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
+        ('this://a:b@localhost:555/some/path','Socks5',
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
          {'scheme': 'socks5', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
         ('this://a:b@localhost:555/some/path', 123,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
          {'scheme': '123', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
         ('this://a:b@localhost:555/some/path', False,
-         {'scheme': 'false', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': None, 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
         ('this://a:b@localhost:555/some/path', 'file',
-         {'scheme': 'file', 'username': None, 'password': None, 'host': None, 'port': None, 'path': '/some/path'}),
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'file', 'username': None, 'password': None, 'host': None, 'port': None, 'path': 'a:b@localhost:555/some/path'}),
     ),
 )
-def test_URL_scheme(url, scheme, exp_attrs):
-    original_scheme = _utils.URL(url).scheme
+def test_URL_scheme(url, new_scheme, exp_before, exp_after):
     cb = Mock()
     url = _utils.URL(url, on_change=cb)
     assert cb.call_args_list == []
-    assert url.scheme == original_scheme
-    url.scheme = scheme
-    for attr, exp_value in exp_attrs.items():
-        assert getattr(url, attr) == exp_value
+    assert make_url_parts(url) == exp_before
+    url.scheme = new_scheme
+    assert make_url_parts(url) == exp_after
     assert cb.call_args_list == [call()]
 
 
