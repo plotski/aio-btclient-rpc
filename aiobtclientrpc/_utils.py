@@ -276,31 +276,32 @@ class URL:
     @property
     def without_auth(self):
         """URL string without :attr:`username` and :attr:`password`"""
-        parts = [self.scheme + '://']
-        if self.host:
-            parts.append(self.host)
-        if self.port:
-            parts.append(':' + self.port)
-        if self.path:
-            parts.append(self.path)
-        return ''.join(parts)
+        return self._as_string(with_auth=False)
 
     @property
     def with_auth(self):
         """URL string with :attr:`username` and :attr:`password`"""
-        parts = [self.scheme + '://']
-        if self.username and self.password:
-            parts.append(f'{self.username}:{self.password}@')
-        elif self.username:
-            parts.append(self.username + ':@')
-        elif self.password:
-            parts.append(':' + self.password + '@')
+        return self._as_string(with_auth=True)
+
+    def _as_string(self, with_auth=False):
+        parts = []
+
+        if self.scheme:
+            parts.append(f'{self.scheme}://')
+
+        if with_auth:
+            if self.username or self.password:
+                parts.append(f'{self.username or ""}:{self.password or ""}@')
+
         if self.host:
             parts.append(self.host)
+
         if self.port:
-            parts.append(':' + self.port)
+            parts.append(f':{self.port}')
+
         if self.path:
             parts.append(self.path)
+
         return ''.join(parts)
 
     def __str__(self):

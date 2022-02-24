@@ -327,56 +327,56 @@ def test_URL_password(url, password, exp_password):
     assert cb.call_args_list == [call()]
 
 
-@pytest.mark.parametrize('auth', ('a:b@', ':b@', 'a:@', ''))
+@pytest.mark.parametrize('path, exp_path', (('', ''), ('/some/path', '/some/path')))
+@pytest.mark.parametrize('port, exp_port', (('', ''), (':123', ':123')))
 @pytest.mark.parametrize(
     argnames='url, exp_url',
     argvalues=(
-        ('http://{auth}localhost', 'http://localhost'),
-        ('http://{auth}localhost:1234', 'http://localhost:1234'),
-        ('http://{auth}localhost/some/path', 'http://localhost/some/path'),
-        ('http://{auth}localhost:1234/some/path', 'http://localhost:1234/some/path'),
-        ('file://{auth}localhost', 'file://{auth}localhost'),
-        ('file://{auth}localhost:1234', 'file://{auth}localhost:1234'),
-        ('file://{auth}localhost/some/path', 'file://{auth}localhost/some/path'),
-        ('file://{auth}localhost:1234/some/path', 'file://{auth}localhost:1234/some/path'),
+        ('http://a:b@localhost{port}{path}', 'http://localhost{exp_port}{exp_path}'),
+        ('http://:b@localhost{port}{path}', 'http://localhost{exp_port}{exp_path}'),
+        ('http://a:@localhost{port}{path}', 'http://localhost{exp_port}{exp_path}'),
+        ('http://:@localhost{port}{path}', 'http://localhost{exp_port}{exp_path}'),
+        ('http://localhost{port}{path}', 'http://localhost{exp_port}{exp_path}'),
+
+        # For file:// URLs, "username:password@" has no special meaning
+        ('file://a:b@localhost{port}{path}', 'file://a:b@localhost{exp_port}{exp_path}'),
+        ('file://:b@localhost{port}{path}', 'file://:b@localhost{exp_port}{exp_path}'),
+        ('file://a:@localhost{port}{path}', 'file://a:@localhost{exp_port}{exp_path}'),
+        ('file://:@localhost{port}{path}', 'file://:@localhost{exp_port}{exp_path}'),
+        ('file://localhost{port}{path}', 'file://localhost{exp_port}{exp_path}'),
     ),
 )
-def test_URL_without_auth(url, auth, exp_url):
-    url = _utils.URL(url.format(auth=auth))
-    assert url.without_auth == exp_url.format(auth=auth)
-    if auth and not exp_url.startswith('file://'):
-        exp_username, exp_password = auth[:-1].split(':')
-        assert url.username == (exp_username or None)
-        assert url.password == (exp_password or None)
-    else:
-        assert url.username is None
-        assert url.password is None
+def test_URL_without_auth(url, exp_url, port, exp_port, path, exp_path):
+    url = _utils.URL(url.format(port=port, path=path))
+    url_without_auth = url.without_auth
+    exp_url_without_auth = exp_url.format(exp_port=exp_port, exp_path=exp_path)
+    assert url_without_auth == exp_url_without_auth
 
 
-@pytest.mark.parametrize('auth', ('a:b@', ':b@', 'a:@', ''))
+@pytest.mark.parametrize('path, exp_path', (('', ''), ('/some/path', '/some/path')))
+@pytest.mark.parametrize('port, exp_port', (('', ''), (':123', ':123')))
 @pytest.mark.parametrize(
     argnames='url, exp_url',
     argvalues=(
-        ('http://{auth}localhost', 'http://{auth}localhost'),
-        ('http://{auth}localhost:1234', 'http://{auth}localhost:1234'),
-        ('http://{auth}localhost/some/path', 'http://{auth}localhost/some/path'),
-        ('http://{auth}localhost:1234/some/path', 'http://{auth}localhost:1234/some/path'),
-        ('file://{auth}localhost', 'file://{auth}localhost'),
-        ('file://{auth}localhost:1234', 'file://{auth}localhost:1234'),
-        ('file://{auth}localhost/some/path', 'file://{auth}localhost/some/path'),
-        ('file://{auth}localhost:1234/some/path', 'file://{auth}localhost:1234/some/path'),
+        ('http://a:b@localhost{port}{path}', 'http://a:b@localhost{exp_port}{exp_path}'),
+        ('http://:b@localhost{port}{path}', 'http://:b@localhost{exp_port}{exp_path}'),
+        ('http://a:@localhost{port}{path}', 'http://a:@localhost{exp_port}{exp_path}'),
+        ('http://:@localhost{port}{path}', 'http://localhost{exp_port}{exp_path}'),
+        ('http://localhost{port}{path}', 'http://localhost{exp_port}{exp_path}'),
+
+        # For file:// URLs, "username:password@" has no special meaning
+        ('file://a:b@localhost{port}{path}', 'file://a:b@localhost{exp_port}{exp_path}'),
+        ('file://:b@localhost{port}{path}', 'file://:b@localhost{exp_port}{exp_path}'),
+        ('file://a:@localhost{port}{path}', 'file://a:@localhost{exp_port}{exp_path}'),
+        ('file://:@localhost{port}{path}', 'file://:@localhost{exp_port}{exp_path}'),
+        ('file://localhost{port}{path}', 'file://localhost{exp_port}{exp_path}'),
     ),
 )
-def test_URL_with_auth(url, auth, exp_url):
-    url = _utils.URL(url.format(auth=auth))
-    assert url.with_auth == exp_url.format(auth=auth)
-    if auth and not exp_url.startswith('file://'):
-        exp_username, exp_password = auth[:-1].split(':')
-        assert url.username == (exp_username or None)
-        assert url.password == (exp_password or None)
-    else:
-        assert url.username is None
-        assert url.password is None
+def test_URL_with_auth(url, exp_url, port, exp_port, path, exp_path):
+    url = _utils.URL(url.format(port=port, path=path))
+    url_with_auth = url.with_auth
+    exp_url_with_auth = exp_url.format(exp_port=exp_port, exp_path=exp_path)
+    assert url_with_auth == exp_url_with_auth
 
 
 @pytest.mark.parametrize(
