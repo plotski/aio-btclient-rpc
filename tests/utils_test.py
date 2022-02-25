@@ -467,17 +467,14 @@ def test_URL_str(mocker):
     mocker.patch.object(type(url), 'without_auth', PropertyMock(return_value='mocked URL'))
     assert str(url) == 'mocked URL'
 
-
-def test_URL_repr_without_on_change_callback(mocker):
-    url = _utils.URL('this://localhost')
+@pytest.mark.parametrize('on_change', (None, Mock()))
+def test_URL_repr_without_on_change_callback(on_change, mocker):
+    url = _utils.URL('this://localhost', on_change=on_change)
     mocker.patch.object(type(url), 'without_auth', PropertyMock(return_value='mocked URL'))
-    assert repr(url) == "URL('mocked URL')"
-
-def test_URL_repr_with_on_change_callback(mocker):
-    cb = Mock()
-    url = _utils.URL('this://localhost', on_change=cb)
-    mocker.patch.object(type(url), 'without_auth', PropertyMock(return_value='mocked URL'))
-    assert repr(url) == f"URL('mocked URL', on_change={cb!r})"
+    if on_change:
+        assert repr(url) == f"URL('mocked URL', on_change={on_change!r})"
+    else:
+        assert repr(url) == "URL('mocked URL')"
 
 
 @pytest.mark.parametrize('proxy_url', (None, 'socks5://foo.bar'))
