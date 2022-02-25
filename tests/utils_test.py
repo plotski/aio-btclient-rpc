@@ -199,9 +199,9 @@ def test_URL_with_valid_value(url, default_scheme, exp_parts_or_exception):
         ('this://a:b@localhost:555/some/path', 'that',
          {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
          {'scheme': 'that', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
-        ('this://a:b@localhost:555/some/path', 'THAT',
+        ('this://a:b@localhost:555/some/path', 'FILE',
          {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
-         {'scheme': 'that', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
+         {'scheme': 'file', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
         ('this://a:b@localhost:555/some/path','Socks5',
          {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
          {'scheme': 'socks5', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
@@ -211,9 +211,6 @@ def test_URL_with_valid_value(url, default_scheme, exp_parts_or_exception):
         ('this://a:b@localhost:555/some/path', False,
          {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
          {'scheme': None, 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
-        ('this://a:b@localhost:555/some/path', 'file',
-         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
-         {'scheme': 'file', 'username': None, 'password': None, 'host': None, 'port': None, 'path': 'a:b@localhost:555/some/path'}),
     ),
 )
 def test_URL_scheme(url, new_scheme, exp_before, exp_after):
@@ -227,121 +224,162 @@ def test_URL_scheme(url, new_scheme, exp_before, exp_after):
 
 
 @pytest.mark.parametrize(
-    argnames='url, host, exp_host',
+    argnames='url, new_host, exp_before, exp_after',
     argvalues=(
-        ('this://a:b@localhost:555/some/path', 'nonlocalhost', 'nonlocalhost'),
-        ('this://a:b@localhost:555/some/path', '127.0.0.1', '127.0.0.1'),
-        ('this://a:b@localhost:555/some/path', 123, '123'),
-        ('this://a:b@localhost:555/some/path', None, None),
-        ('this://a:b@localhost:555/some/path', False, None),
-        ('this://a:b@localhost:555/some/path', True, 'True'),
-        ('file:///some/path', 'the.host', None),
+        ('this://a:b@localhost:555/some/path', '127.0.0.1',
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': '127.0.0.1', 'port': '555', 'path': '/some/path'}),
+        ('this://a:b@localhost:555/some/path', 123,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': '123', 'port': '555', 'path': '/some/path'}),
+        ('this://a:b@localhost:555/some/path', None,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': None, 'port': '555', 'path': '/some/path'}),
+        ('this://a:b@localhost:555/some/path', False,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': None, 'port': '555', 'path': '/some/path'}),
     ),
 )
-def test_URL_host(url, host, exp_host):
+def test_URL_host(url, new_host, exp_before, exp_after):
     cb = Mock()
     url = _utils.URL(url, on_change=cb)
-    assert url.host == _utils.URL(url).host
     assert cb.call_args_list == []
-    url.host = host
-    assert url.host == exp_host
+    assert make_url_parts(url) == exp_before
+    url.host = new_host
+    assert make_url_parts(url) == exp_after
     assert cb.call_args_list == [call()]
 
 
 @pytest.mark.parametrize(
-    argnames='url, port, exp_port, exp_exception',
+    argnames='url, new_port, exp_before, exp_after',
     argvalues=(
-        ('this://a:b@localhost:555/some/path', -1, None, _errors.ValueError('Invalid port')),
-        ('this://a:b@localhost:555/some/path', 0, None, None),
-        ('this://a:b@localhost:555/some/path', None, None, None),
-        ('this://a:b@localhost:555/some/path', False, None, None),
-        ('this://a:b@localhost:555/some/path', -1, None, _errors.ValueError('Invalid port')),
-        ('this://a:b@localhost:555/some/path', '-1', None, _errors.ValueError('Invalid port')),
-        ('this://a:b@localhost:555/some/path', 1, '1', None),
-        ('this://a:b@localhost:555/some/path', '1', '1', None),
-        ('this://a:b@localhost:555/some/path', 65535, '65535', None),
-        ('this://a:b@localhost:555/some/path', '65535', '65535', None),
-        ('this://a:b@localhost:555/some/path', 65536, None, _errors.ValueError('Invalid port')),
-        ('this://a:b@localhost:555/some/path', '65536', None, _errors.ValueError('Invalid port')),
-        ('this://a:b@localhost:555/some/path', 'foo', None, _errors.ValueError('Invalid port')),
-        ('file:///some/path', 1234, None, None),
+        ('this://a:b@localhost:555/some/path', 0,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': None, 'path': '/some/path'}),
+        ('this://a:b@localhost:555/some/path', 1,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '1', 'path': '/some/path'}),
+        ('this://a:b@localhost:555/some/path', 65535,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '65535', 'path': '/some/path'}),
+        ('this://a:b@localhost:555/some/path', -1,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         _errors.ValueError('Invalid port')),
+        ('this://a:b@localhost:555/some/path', '-1',
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         _errors.ValueError('Invalid port')),
+        ('this://a:b@localhost:555/some/path', 65536,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         _errors.ValueError('Invalid port')),
+        ('this://a:b@localhost:555/some/path', 'foo',
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         _errors.ValueError('Invalid port')),
+        ('this://a:b@localhost:555/some/path', None,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': None, 'path': '/some/path'}),
+        ('this://a:b@localhost:555/some/path', False,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': None, 'path': '/some/path'}),
     ),
 )
-def test_URL_port(url, port, exp_port, exp_exception):
-    original_port = _utils.URL(url).port
+def test_URL_port(url, new_port, exp_before, exp_after):
     cb = Mock()
     url = _utils.URL(url, on_change=cb)
+    original_port = url.port
     assert cb.call_args_list == []
-    assert url.port == original_port
-    if exp_exception:
-        with pytest.raises(type(exp_exception), match=rf'^{re.escape(str(exp_exception))}$'):
-            url.port = port
+    assert make_url_parts(url) == exp_before
+    if isinstance(exp_after, Exception):
+        with pytest.raises(type(exp_after), match=rf'^{re.escape(str(exp_after))}$'):
+            url.port = new_port
         assert url.port == original_port
         assert cb.call_args_list == []
     else:
-        url.port = port
-        assert url.port == exp_port
+        url.port = new_port
+        assert make_url_parts(url) == exp_after
         assert cb.call_args_list == [call()]
 
 
 @pytest.mark.parametrize(
-    argnames='url, path, exp_path',
+    argnames='url, new_path, exp_before, exp_after',
     argvalues=(
-        ('this://a:b@localhost:555/initial/path', 'path', 'path'),
-        ('this://a:b@localhost:555/initial/path', '/path', '/path'),
-        ('this://a:b@localhost:555/initial/path', '/more/path', '/more/path'),
-        ('this://a:b@localhost:555/initial/path', 123, '123'),
-        ('file:///some/path', 'another/path', 'another/path'),
+        ('this://a:b@localhost:555/some/path', 'other/path',
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': 'other/path'}),
+        ('this://a:b@localhost:555/some/path', '/other/path',
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/other/path'}),
+        ('this://a:b@localhost:555/some/path', 123,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '123'}),
+        ('this://a:b@localhost:555/some/path', None,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': None}),
+        ('this://a:b@localhost:555/some/path', False,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': None}),
     ),
 )
-def test_URL_path(url, path, exp_path):
-    original_path = _utils.URL(url).path
+def test_URL_path(url, new_path, exp_before, exp_after):
     cb = Mock()
     url = _utils.URL(url, on_change=cb)
     assert cb.call_args_list == []
-    assert url.path == original_path
-    url.path = path
-    assert url.path == exp_path
+    assert make_url_parts(url) == exp_before
+    url.path = new_path
+    assert make_url_parts(url) == exp_after
     assert cb.call_args_list == [call()]
 
 
 @pytest.mark.parametrize(
-    argnames='url, username, exp_username',
+    argnames='url, new_username, exp_before, exp_after',
     argvalues=(
-        ('this://a:b@localhost:555/some/path', 'foo', 'foo'),
-        ('this://a:b@localhost:555/some/path', 'Foo', 'Foo'),
-        ('this://a:b@localhost:555/some/path', 123, '123'),
-        ('file:///some/path', 'Asdf', None),
+        ('this://a:b@localhost:555/some/path', 'x',
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'x', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
+        ('this://a:b@localhost:555/some/path', 123,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': '123', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
+        ('this://a:b@localhost:555/some/path', None,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': None, 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
+        ('this://a:b@localhost:555/some/path', False,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': None, 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
     ),
 )
-def test_URL_username(url, username, exp_username):
-    original_username = _utils.URL(url).username
+def test_URL_username(url, new_username, exp_before, exp_after):
     cb = Mock()
     url = _utils.URL(url, on_change=cb)
     assert cb.call_args_list == []
-    assert url.username == original_username
-    url.username = username
-    assert url.username == exp_username
+    assert make_url_parts(url) == exp_before
+    url.username = new_username
+    assert make_url_parts(url) == exp_after
     assert cb.call_args_list == [call()]
 
 
 @pytest.mark.parametrize(
-    argnames='url, password, exp_password',
+    argnames='url, new_password, exp_before, exp_after',
     argvalues=(
-        ('this://a:b@localhost:555/some/path', 'foo', 'foo'),
-        ('this://a:b@localhost:555/some/path', 'Foo', 'Foo'),
-        ('this://a:b@localhost:555/some/path', 123, '123'),
-        ('file:///some/path', 'ASDF', None),
+        ('this://a:b@localhost:555/some/path', 'x',
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': 'x', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
+        ('this://a:b@localhost:555/some/path', 123,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': '123', 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
+        ('this://a:b@localhost:555/some/path', None,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': None, 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
+        ('this://a:b@localhost:555/some/path', False,
+         {'scheme': 'this', 'username': 'a', 'password': 'b', 'host': 'localhost', 'port': '555', 'path': '/some/path'},
+         {'scheme': 'this', 'username': 'a', 'password': None, 'host': 'localhost', 'port': '555', 'path': '/some/path'}),
     ),
 )
-def test_URL_password(url, password, exp_password):
-    original_password = _utils.URL(url).password
+def test_URL_password(url, new_password, exp_before, exp_after):
     cb = Mock()
     url = _utils.URL(url, on_change=cb)
     assert cb.call_args_list == []
-    assert url.password == original_password
-    url.password = password
-    assert url.password == exp_password
+    assert make_url_parts(url) == exp_before
+    url.password = new_password
+    assert make_url_parts(url) == exp_after
     assert cb.call_args_list == [call()]
 
 
