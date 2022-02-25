@@ -174,7 +174,7 @@ def make_url_parts(url):
     ),
     ids=lambda v: str(v),
 )
-def test_URL_with_valid_value(url, default_scheme, exp_parts_or_exception):
+def test_URL_instantiation(url, default_scheme, exp_parts_or_exception):
     def make_url(url, default_scheme):
         if default_scheme:
             return _utils.URL(url, default_scheme=default_scheme)
