@@ -166,16 +166,10 @@ class URL:
         # Don't trigger any changes until we finished parsing the initial value
         self._on_change = None
 
-        # Set defaults
         default_url = self._dict_from_string(default or self.default)
-        for name in ('scheme', 'username', 'password', 'host', 'port', 'path'):
-            setattr(self, name, default_url[name])
-
-        # Update defaults
         custom_url = self._dict_from_string(url)
         for name in ('scheme', 'username', 'password', 'host', 'port', 'path'):
-            if custom_url[name] is not None:
-                setattr(self, name, custom_url[name])
+            setattr(self, name, custom_url[name] or default_url[name])
 
         # Initial parsing is complete - enable on_change callback
         self._on_change = on_change
