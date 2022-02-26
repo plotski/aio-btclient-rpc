@@ -8,6 +8,48 @@ import logging  # isort:skip
 _log = logging.getLogger(__name__)
 
 
+class RtorrentURL(_utils.URL):
+    """rTorrent RPC URL"""
+
+    default = 'scgi://127.0.0.1:5000'
+
+    @property
+    def scheme(self):
+        """Valid schemes: ``file``, ``scgi``, ``http``, ``https``"""
+        return super().scheme
+
+    @scheme.setter
+    def scheme(self, scheme):
+        if not scheme or str(scheme).lower() in ('file', 'scgi', 'http', 'https'):
+            _utils.URL.scheme.fset(self, scheme)
+        else:
+            raise _errors.ValueError('Scheme must be "file", "scgi", "http" or "https"')
+
+    @_utils.URL.host.setter
+    def host(self, host):
+        if host and self.scheme == 'file':
+            host = None
+        _utils.URL.host.fset(self, host)
+
+    @_utils.URL.port.setter
+    def port(self, port):
+        if port and self.scheme == 'file':
+            port = None
+        _utils.URL.port.fset(self, port)
+
+    @_utils.URL.username.setter
+    def username(self, username):
+        if username and self.scheme in ('file', 'scgi'):
+            username = None
+        _utils.URL.username.fset(self, username)
+
+    @_utils.URL.password.setter
+    def password(self, password):
+        if password and self.scheme in ('file', 'scgi'):
+            password = None
+        _utils.URL.password.fset(self, password)
+
+
 class RtorrentRPC(_base.RPCBase):
     """
     RPC client for rTorrent
@@ -27,7 +69,7 @@ class RtorrentRPC(_base.RPCBase):
 
     name = 'rtorrent'
     label = 'rTorrent'
-    default_url = 'scgi://127.0.0.1:5000'
+    URL = RtorrentURL
 
     def __init__(
         self,

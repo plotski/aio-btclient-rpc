@@ -8,7 +8,63 @@ import pytest
 
 from aiobtclientrpc import RPCBase, _errors, _rtorrent, _utils
 
-from .common import AsyncMock
+from .common import AsyncMock, make_url_parts
+
+
+@pytest.mark.parametrize(
+    argnames='url, exp',
+    argvalues=(
+        # Default URL
+        ('',
+         {'scheme': 'scgi', 'host': '127.0.0.1', 'port': '5000', 'path': None, 'username': None, 'password': None}),
+
+        # RPC socket path
+        ('/abs/path/to/rpc.socket',
+         {'scheme': 'file', 'host': None, 'port': None, 'path': '/abs/path/to/rpc.socket', 'username': None, 'password': None}),
+        ('file:///path/to/rpc.socket',
+         {'scheme': 'file', 'host': None, 'port': None, 'path': '/path/to/rpc.socket', 'username': None, 'password': None}),
+        ('file://foo:bar@path/to/rpc.socket',
+         {'scheme': 'file', 'host': None, 'port': None, 'path': 'foo:bar@path/to/rpc.socket', 'username': None, 'password': None}),
+        ('file://path:123/to/rpc.socket',
+         {'scheme': 'file', 'host': None, 'port': None, 'path': 'path:123/to/rpc.socket', 'username': None, 'password': None}),
+
+        # SCGI
+        ('myhost',
+         {'scheme': 'scgi', 'host': 'myhost', 'port': '5000', 'path': None, 'username': None, 'password': None}),
+        ('myhost:123',
+         {'scheme': 'scgi', 'host': 'myhost', 'port': '123', 'path': None, 'username': None, 'password': None}),
+        ('scgi://myhost:123',
+         {'scheme': 'scgi', 'host': 'myhost', 'port': '123', 'path': None, 'username': None, 'password': None}),
+        ('scgi://foo:bar@myhost:123',
+         {'scheme': 'scgi', 'host': 'myhost', 'port': '123', 'path': None, 'username': None, 'password': None}),
+        ('scgi://myhost:123/some/path',
+         {'scheme': 'scgi', 'host': 'myhost', 'port': '123', 'path': '/some/path', 'username': None, 'password': None}),
+
+        # HTTP(s)
+        ('http://myhost:123',
+         {'scheme': 'http', 'host': 'myhost', 'port': '123', 'path': None, 'username': None, 'password': None}),
+        ('http://foo:bar@myhost:123',
+         {'scheme': 'http', 'host': 'myhost', 'port': '123', 'path': None, 'username': 'foo', 'password': 'bar'}),
+        ('https://foo:bar@myhost:123/RPC123',
+         {'scheme': 'https', 'host': 'myhost', 'port': '123', 'path': '/RPC123', 'username': 'foo', 'password': 'bar'}),
+        ('https://foo:bar@myhost',
+         {'scheme': 'https', 'host': 'myhost', 'port': '5000', 'path': None, 'username': 'foo', 'password': 'bar'}),
+        ('https://myhost/RPC/17',
+         {'scheme': 'https', 'host': 'myhost', 'port': '5000', 'path': '/RPC/17', 'username': None, 'password': None}),
+
+        # Invalid
+        ('arf://myhost',
+         _errors.ValueError('Scheme must be "file", "scgi", "http" or "https"')),
+    ),
+    ids=lambda v: str(v),
+)
+def test_RtorrentURL(url, exp):
+    if isinstance(exp, Exception):
+        with pytest.raises(type(exp), match=rf'^{re.escape(str(exp))}$'):
+            _rtorrent.RtorrentURL(url)
+    else:
+        url = _rtorrent.RtorrentURL(url)
+        assert make_url_parts(url) == exp
 
 
 class AsyncIterator:
