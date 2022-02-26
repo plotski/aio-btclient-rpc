@@ -97,73 +97,87 @@ class URL:
     following any specs. For example ``"localhost:1234"`` is interpreted as
     ``host=localhost, port=1234`` instead of ``scheme=localhost, path=1234``.
 
-    :param str default_scheme: Scheme to use when the URL doesn't provide one
-        and a host/IP is detected (i.e. it's not a file:// URL)
+    :param str url: URL string
+    :param str default: Fallback URL when `url` is falsy
     :param callable on_change: Callback that is called with no arguments when
         any property is modified
 
     :raise ValueError: if `url` is invalid
     """
 
-    _scheme_regex = re.compile(r'^(.*?)://')
-    _auth_regex = re.compile(r'^(.*?):(.*?)@')
-    _host_regex = re.compile(r'^(.*?)(?=/|:|$)')
-    _port_regex = re.compile(r'^:(.*?)(?=/|$)')
+    @staticmethod
+    def _dict_from_string(string):
+        string = str(string).strip()
+        parts = {
+            'scheme': None,
+            'username': None,
+            'password': None,
+            'host': None,
+            'port': None,
+            'path': None,
+        }
 
-    def __init__(self, url, default_scheme=None, on_change=None):
+        # Scheme
+        scheme_regex = re.compile(r'^(.*?)://')
+        match = scheme_regex.search(string)
+        if match:
+            parts['scheme'] = match.group(1) or None
+            string = scheme_regex.sub('', string)
+        elif string.startswith(os.sep):
+            # Assume file system path if URL starts with path separator
+            parts['scheme'] = 'file'
+
+        # File system paths don't have authentication, port, etc
+        if parts['scheme'] == 'file':
+            parts['path'] = string or None
+
+        else:
+            # Authentication
+            auth_regex = re.compile(r'^(.*?):(.*?)@')
+            match = auth_regex.search(string)
+            if match:
+                parts['username'] = match.group(1) or None
+                parts['password'] = match.group(2) or None
+                string = auth_regex.sub('', string)
+
+            # Host
+            host_regex = re.compile(r'^(.*?)(?=/|:|$)')
+            match = host_regex.search(string)
+            if match:
+                parts['host'] = match.group(1) or None
+                string = host_regex.sub('', string)
+
+            # Port
+            port_regex = re.compile(r'^:(.*?)(?=/|$)')
+            match = port_regex.search(string)
+            if match:
+                parts['port'] = match.group(1) or None
+                string = port_regex.sub('', string)
+
+            # Path
+            parts['path'] = string or None
+
+        return parts
+
+    default = ''
+    """URL to use when ``url`` and ``default`` arguments are both falsy"""
+
+    def __init__(self, url, default=None, on_change=None):
         # Don't trigger any changes until we finished parsing the initial value
         self._on_change = None
 
         # Set defaults
-        self._scheme = str(default_scheme) if default_scheme else None
-        self._username = None
-        self._password = None
-        self._host = None
-        self._port = None
-        self._path = None
+        default_url = self._dict_from_string(default or self.default)
+        for name in ('scheme', 'username', 'password', 'host', 'port', 'path'):
+            setattr(self, name, default_url[name])
 
-        url = str(url).strip()
+        # Update defaults
+        custom_url = self._dict_from_string(url)
+        for name in ('scheme', 'username', 'password', 'host', 'port', 'path'):
+            if custom_url[name] is not None:
+                setattr(self, name, custom_url[name])
 
-        # Scheme
-        match = self._scheme_regex.search(url)
-        if match:
-            self.scheme = match.group(1)
-            url = self._scheme_regex.sub('', url)
-        elif default_scheme:
-            self.scheme = default_scheme
-
-        # Assume file system path if URL starts with path separator
-        if self.scheme is None and url.startswith(os.sep):
-            self.scheme = 'file'
-
-        # File system paths don't have authentication, port, etc
-        if self.scheme == 'file':
-            self.path = url
-
-        else:
-            # Authentication
-            match = self._auth_regex.search(url)
-            if match:
-                self.username = match.group(1)
-                self.password = match.group(2)
-                url = self._auth_regex.sub('', url)
-
-            # Host
-            match = self._host_regex.search(url)
-            if match:
-                self.host = match.group(1)
-                url = self._host_regex.sub('', url)
-
-            # Port
-            match = self._port_regex.search(url)
-            if match:
-                self.port = match.group(1)
-                url = self._port_regex.sub('', url)
-
-            # Path
-            self.path = url
-
-        # Parsing is complete, enable on_change callback
+        # Initial parsing is complete - enable on_change callback
         self._on_change = on_change
 
     @property

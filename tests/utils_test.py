@@ -88,102 +88,137 @@ def test_cached_property():
 
 
 @pytest.mark.parametrize(
-    argnames='url, default_scheme, exp_parts_or_exception',
+    argnames='url, exp_parts_or_exception',
     argvalues=(
+        ('',
+         {'scheme': None, 'host': None, 'port': None, 'path': None, 'username': None, 'password': None}),
+
         # No scheme without path
-        ('localhost', None,
+        ('localhost',
          {'scheme': None, 'host': 'localhost', 'port': None, 'path': None, 'username': None, 'password': None}),
-        ('localhost:123', None,
+        ('localhost:123',
          {'scheme': None, 'host': 'localhost', 'port': '123', 'path': None, 'username': None, 'password': None}),
-        ('foo:bar@localhost:123', None,
+        ('foo:bar@localhost:123',
          {'scheme': None, 'host': 'localhost', 'port': '123', 'path': None, 'username': 'foo', 'password': 'bar'}),
-        ('foo:@localhost:123', None,
+        ('foo:@localhost:123',
          {'scheme': None, 'host': 'localhost', 'port': '123', 'path': None, 'username': 'foo', 'password': None}),
-        (':bar@localhost:123', None,
+        (':bar@localhost:123',
          {'scheme': None, 'host': 'localhost', 'port': '123', 'path': None, 'username': None, 'password': 'bar'}),
-        ('localhost:arf', None,
+        ('localhost:arf',
          _errors.ValueError('Invalid port')),
 
         # No scheme with path
-        ('localhost/some/path', None,
+        ('localhost/some/path',
          {'scheme': None, 'host': 'localhost', 'port': None, 'path': '/some/path', 'username': None, 'password': None}),
-        ('localhost:123/some/path', None,
+        ('localhost:123/some/path',
          {'scheme': None, 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': None, 'password': None}),
-        ('foo:bar@localhost:123/some/path', None,
+        ('foo:bar@localhost:123/some/path',
          {'scheme': None, 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': 'foo', 'password': 'bar'}),
-        ('foo:@localhost:123/some/path', None,
+        ('foo:@localhost:123/some/path',
          {'scheme': None, 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': 'foo', 'password': None}),
-        (':bar@localhost:123/some/path', None,
+        (':bar@localhost:123/some/path',
          {'scheme': None, 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': None, 'password': 'bar'}),
-        ('localhost:arf/some/path', None,
+        ('localhost:arf/some/path',
          _errors.ValueError('Invalid port')),
 
         # Scheme without path
-        ('ftp://localhost', None,
+        ('ftp://localhost',
          {'scheme': 'ftp', 'host': 'localhost', 'port': None, 'path': None, 'username': None, 'password': None}),
-        ('ftp://localhost:123', None,
+        ('ftp://localhost:123',
          {'scheme': 'ftp', 'host': 'localhost', 'port': '123', 'path': None, 'username': None, 'password': None}),
-        ('ftp://foo:bar@localhost:123', None,
+        ('ftp://foo:bar@localhost:123',
          {'scheme': 'ftp', 'host': 'localhost', 'port': '123', 'path': None, 'username': 'foo', 'password': 'bar'}),
-        ('ftp://foo:@localhost:123', None,
+        ('ftp://foo:@localhost:123',
          {'scheme': 'ftp', 'host': 'localhost', 'port': '123', 'path': None, 'username': 'foo', 'password': None}),
-        ('ftp://:bar@localhost:123', None,
+        ('ftp://:bar@localhost:123',
          {'scheme': 'ftp', 'host': 'localhost', 'port': '123', 'path': None, 'username': None, 'password': 'bar'}),
-        ('ftp://localhost:arf', None,
+        ('ftp://localhost:arf',
          _errors.ValueError('Invalid port')),
 
         # Scheme with path
-        ('http://localhost/some/path', None,
+        ('http://localhost/some/path',
          {'scheme': 'http', 'host': 'localhost', 'port': None, 'path': '/some/path', 'username': None, 'password': None}),
-        ('http://localhost:123/some/path', None,
+        ('http://localhost:123/some/path',
          {'scheme': 'http', 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': None, 'password': None}),
-        ('http://foo:bar@localhost:123/some/path', None,
+        ('http://foo:bar@localhost:123/some/path',
          {'scheme': 'http', 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': 'foo', 'password': 'bar'}),
-        ('http://foo:@localhost:123/some/path', None,
+        ('http://foo:@localhost:123/some/path',
          {'scheme': 'http', 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': 'foo', 'password': None}),
-        ('http://:bar@localhost:123/some/path', None,
+        ('http://:bar@localhost:123/some/path',
          {'scheme': 'http', 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': None, 'password': 'bar'}),
-        ('http://localhost:arf/some/path', None,
+        ('http://localhost:arf/some/path',
          _errors.ValueError('Invalid port')),
 
         # File system path
-        ('file://relative/path', None,
+        ('file://relative/path',
          {'scheme': 'file', 'host': None, 'port': None, 'path': 'relative/path', 'username': None, 'password': None}),
-        ('file:///absolute/path', None,
+        ('file:///absolute/path',
          {'scheme': 'file', 'host': None, 'port': None, 'path': '/absolute/path', 'username': None, 'password': None}),
-        ('file://foo:bar@localhost', None,
+        ('file://foo:bar@localhost',
          {'scheme': 'file', 'host': None, 'port': None, 'path': 'foo:bar@localhost', 'username': None, 'password': None}),
-        ('file://localhost:123', None,
+        ('file://localhost:123',
          {'scheme': 'file', 'host': None, 'port': None, 'path': 'localhost:123', 'username': None, 'password': None}),
-        ('file://localhost:arf', None,
+        ('file://localhost:arf',
          {'scheme': 'file', 'host': None, 'port': None, 'path': 'localhost:arf', 'username': None, 'password': None}),
-        ('localhost', 'file',
-         {'scheme': 'file', 'host': None, 'port': None, 'path': 'localhost', 'username': None, 'password': None}),
-        ('/absolute/path', None,
+        ('/absolute/path',
          {'scheme': 'file', 'host': None, 'port': None, 'path': '/absolute/path', 'username': None, 'password': None}),
-
-        # Default scheme
-        ('foo:bar@localhost:123/some/path', 'socks',
-         {'scheme': 'socks', 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': 'foo', 'password': 'bar'}),
-        ('http://foo:bar@localhost:123/some/path', 'socks',
-         {'scheme': 'http', 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': 'foo', 'password': 'bar'}),
     ),
     ids=lambda v: str(v),
 )
-def test_URL_instantiation(url, default_scheme, exp_parts_or_exception):
-    def make_url(url, default_scheme):
-        if default_scheme:
-            return _utils.URL(url, default_scheme=default_scheme)
-        else:
-            return _utils.URL(url)
+def test_URL_parsing(url, exp_parts_or_exception):
+    if isinstance(exp_parts_or_exception, Exception):
+        exception = exp_parts_or_exception
+        with pytest.raises(type(exception), match=rf'^{re.escape(str(exception))}$'):
+            _utils.URL(url)
+    else:
+        url = _utils.URL(url)
+        exp_parts = exp_parts_or_exception
+        parts = make_url_parts(url)
+        assert parts == exp_parts
+
+default_url_testcases = (
+    ('foo:bar@localhost:123/some/path', 'socks://x:y@defaulthost:999/default/path',
+     {'scheme': 'socks', 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': 'foo', 'password': 'bar'}),
+    ('http://:bar@localhost:123/some/path', 'socks://x:y@defaulthost:999/default/path',
+     {'scheme': 'http', 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': 'x', 'password': 'bar'}),
+    ('http://foo:@localhost:123/some/path', 'socks://x:y@defaulthost:999/default/path',
+     {'scheme': 'http', 'host': 'localhost', 'port': '123', 'path': '/some/path', 'username': 'foo', 'password': 'y'}),
+    ('http://foo:bar@localhost/some/path', 'socks://x:y@defaulthost:999/default/path',
+     {'scheme': 'http', 'host': 'localhost', 'port': '999', 'path': '/some/path', 'username': 'foo', 'password': 'bar'}),
+    ('http://foo:bar@localhost:123/', 'socks://x:y@defaulthost:999/default/path',
+     {'scheme': 'http', 'host': 'localhost', 'port': '123', 'path': '/', 'username': 'foo', 'password': 'bar'}),
+    ('http://foo:bar@localhost:123', 'socks://x:y@defaulthost:999/default/path',
+     {'scheme': 'http', 'host': 'localhost', 'port': '123', 'path': '/default/path', 'username': 'foo', 'password': 'bar'}),
+    ('http://foo:bar@localhost:asdf', None,
+     _errors.ValueError('Invalid port')),
+)
+
+@pytest.mark.parametrize('url, default_url, exp_parts_or_exception', default_url_testcases)
+def test_URL_default_url_attribute(url, default_url, exp_parts_or_exception):
+    class MyURL(_utils.URL):
+        default = default_url
 
     if isinstance(exp_parts_or_exception, Exception):
         exception = exp_parts_or_exception
         with pytest.raises(type(exception), match=rf'^{re.escape(str(exception))}$'):
-            make_url(url, default_scheme)
-
+            MyURL(url)
     else:
-        url = make_url(url, default_scheme)
+        url = MyURL(url)
+        exp_parts = exp_parts_or_exception
+        parts = make_url_parts(url)
+        assert parts == exp_parts
+
+@pytest.mark.parametrize('url, default_url, exp_parts_or_exception', default_url_testcases)
+def test_URL_default_url_argument(url, default_url, exp_parts_or_exception):
+    class MyURL(_utils.URL):
+        default = 'not://the:correct@url:111/to/use'
+
+    if isinstance(exp_parts_or_exception, Exception):
+        exception = exp_parts_or_exception
+        with pytest.raises(type(exception), match=rf'^{re.escape(str(exception))}$'):
+            MyURL(url, default=default_url)
+    else:
+        url = MyURL(url, default=default_url)
         exp_parts = exp_parts_or_exception
         parts = make_url_parts(url)
         assert parts == exp_parts
