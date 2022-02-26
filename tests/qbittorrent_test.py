@@ -5,7 +5,40 @@ import pytest
 
 from aiobtclientrpc import RPCBase, _errors, _qbittorrent, _utils
 
-from .common import AsyncMock
+from .common import AsyncMock, make_url_parts
+
+
+@pytest.mark.parametrize(
+    argnames='url, exp',
+    argvalues=(
+        ('',
+         {'scheme': 'http', 'host': 'localhost', 'port': '8080', 'path': None, 'username': None, 'password': None}),
+        ('myhost',
+         {'scheme': 'http', 'host': 'myhost', 'port': '8080', 'path': None, 'username': None, 'password': None}),
+        ('myhost:123',
+         {'scheme': 'http', 'host': 'myhost', 'port': '123', 'path': None, 'username': None, 'password': None}),
+        ('foo:bar@myhost:123',
+         {'scheme': 'http', 'host': 'myhost', 'port': '123', 'path': None, 'username': 'foo', 'password': 'bar'}),
+        ('https://myhost',
+         {'scheme': 'https', 'host': 'myhost', 'port': '8080', 'path': None, 'username': None, 'password': None}),
+        ('https://myhost:123',
+         {'scheme': 'https', 'host': 'myhost', 'port': '123', 'path': None, 'username': None, 'password': None}),
+        ('https://foo:bar@myhost',
+         {'scheme': 'https', 'host': 'myhost', 'port': '8080', 'path': None, 'username': 'foo', 'password': 'bar'}),
+        ('file://myhost',
+         _errors.ValueError('Scheme must be "http" or "https"')),
+        ('myhost/foo',
+         {'scheme': 'http', 'host': 'myhost', 'port': '8080', 'path': None, 'username': None, 'password': None}),
+    ),
+    ids=lambda v: str(v),
+)
+def test_QbittorrentURL(url, exp):
+    if isinstance(exp, Exception):
+        with pytest.raises(type(exp), match=rf'^{re.escape(str(exp))}$'):
+            _qbittorrent.QbittorrentURL(url)
+    else:
+        url = _qbittorrent.QbittorrentURL(url)
+        assert make_url_parts(url) == exp
 
 
 @pytest.mark.parametrize('url', (None, 'http://a:b@foo:123'))

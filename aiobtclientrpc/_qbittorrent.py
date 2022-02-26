@@ -1,7 +1,34 @@
-from . import _base, _errors
+from . import _base, _errors, _utils
 
 import logging  # isort:skip
 _log = logging.getLogger(__name__)
+
+
+class QbittorrentURL(_utils.URL):
+    """qBittorrent RPC URL"""
+
+    default = 'http://localhost:8080'
+
+    @property
+    def scheme(self):
+        """Valid schemes: ``http``, ``https``"""
+        return super().scheme
+
+    @scheme.setter
+    def scheme(self, scheme):
+        if scheme and scheme.lower() not in ('http', 'https'):
+            raise _errors.ValueError('Scheme must be "http" or "https"')
+        else:
+            _utils.URL.scheme.fset(self, scheme)
+
+    @property
+    def path(self):
+        """Always `None`"""
+        return super().path
+
+    @path.setter
+    def path(self, path):
+        _utils.URL.path.fset(self, None)
 
 
 class QbittorrentRPC(_base.RPCBase):
@@ -82,7 +109,7 @@ class QbittorrentRPC(_base.RPCBase):
 
     name = 'qbittorrent'
     label = 'qBittorrent'
-    default_url = 'http://localhost:8080'
+    URL = QbittorrentURL
 
     def __init__(
         self,
