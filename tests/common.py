@@ -18,3 +18,8 @@ class AsyncMock(Mock):
 
     async def __call__(self, *args, **kwargs):
         return super().__call__(*args, **kwargs)
+
+
+def make_url_parts(url):
+    return {name: getattr(url, name)
+            for name in ('scheme', 'host', 'port', 'path', 'username', 'password')}

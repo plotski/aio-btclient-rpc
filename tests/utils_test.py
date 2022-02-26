@@ -8,7 +8,7 @@ import pytest
 
 from aiobtclientrpc import __project_name__, __version__, _errors, _utils
 
-from .common import AsyncMock
+from .common import AsyncMock, make_url_parts
 
 
 @pytest.mark.asyncio
@@ -86,10 +86,6 @@ def test_cached_property():
         assert foo.bar == 'expensive value'
         assert expensive_calculation.call_args_list == [call('a', 'b', c='see')]
 
-
-def make_url_parts(url):
-    return {name: getattr(url, name)
-            for name in ('scheme', 'host', 'port', 'path', 'username', 'password')}
 
 @pytest.mark.parametrize(
     argnames='url, default_scheme, exp_parts_or_exception',
