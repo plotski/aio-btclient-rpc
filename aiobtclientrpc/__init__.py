@@ -14,9 +14,9 @@ __author_email__ = 'plotski@example.org'
 from ._base import RPCBase
 from ._errors import *
 
-from ._deluge import DelugeRPC
-from ._qbittorrent import QbittorrentRPC
-from ._rtorrent import RtorrentRPC
-from ._transmission import TransmissionRPC
+from ._deluge import DelugeRPC, DelugeURL
+from ._qbittorrent import QbittorrentRPC, QbittorrentURL
+from ._rtorrent import RtorrentRPC, RtorrentURL
+from ._transmission import TransmissionRPC, TransmissionURL
 
 from ._utils import URL, ConnectionStatus, client, clients
