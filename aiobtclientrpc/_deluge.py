@@ -7,6 +7,33 @@ import logging  # isort:skip
 _log = logging.getLogger(__name__)
 
 
+class DelugeURL(_utils.URL):
+    """Deluge RPC URL"""
+
+    default = 'localhost:58846'
+
+    @property
+    def scheme(self):
+        """Valid schemes: ``None``"""
+        return super().scheme
+
+    @scheme.setter
+    def scheme(self, scheme):
+        if scheme:
+            raise _errors.ValueError(f'Invalid scheme: {scheme}')
+        else:
+            _utils.URL.scheme.fset(self, scheme)
+
+    @property
+    def path(self):
+        """Always `None`"""
+        return super().path
+
+    @path.setter
+    def path(self, path):
+        _utils.URL.path.fset(self, None)
+
+
 class DelugeRPC(_base.RPCBase):
     """
     RPC client for Deluge
@@ -41,7 +68,7 @@ class DelugeRPC(_base.RPCBase):
 
     name = 'deluge'
     label = 'Deluge'
-    default_url = 'localhost:58846'
+    URL = DelugeURL
 
     def __init__(
         self,

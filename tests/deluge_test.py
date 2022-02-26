@@ -1,4 +1,5 @@
 import asyncio
+import re
 import ssl
 import struct
 import zlib
@@ -10,7 +11,36 @@ import rencode
 
 from aiobtclientrpc import RPCBase, _deluge, _errors, _utils
 
-from .common import AsyncMock
+from .common import AsyncMock, make_url_parts
+
+
+@pytest.mark.parametrize(
+    argnames='url, exp',
+    argvalues=(
+        ('',
+         {'scheme': None, 'host': 'localhost', 'port': '58846', 'path': None, 'username': None, 'password': None}),
+        ('myhost',
+         {'scheme': None, 'host': 'myhost', 'port': '58846', 'path': None, 'username': None, 'password': None}),
+        ('myhost:123',
+         {'scheme': None, 'host': 'myhost', 'port': '123', 'path': None, 'username': None, 'password': None}),
+        ('foo:bar@myhost',
+         {'scheme': None, 'host': 'myhost', 'port': '58846', 'path': None, 'username': 'foo', 'password': 'bar'}),
+        ('foo:bar@myhost:123',
+         {'scheme': None, 'host': 'myhost', 'port': '123', 'path': None, 'username': 'foo', 'password': 'bar'}),
+        ('http://myhost',
+         _errors.ValueError('Invalid scheme: http')),
+        ('myhost/foo',
+         {'scheme': None, 'host': 'myhost', 'port': '58846', 'path': None, 'username': None, 'password': None}),
+    ),
+    ids=lambda v: str(v),
+)
+def test_DelugeURL(url, exp):
+    if isinstance(exp, Exception):
+        with pytest.raises(type(exp), match=rf'^{re.escape(str(exp))}$'):
+            _deluge.DelugeURL(url)
+    else:
+        url = _deluge.DelugeURL(url)
+        assert make_url_parts(url) == exp
 
 
 @pytest.mark.parametrize('url', (None, 'a:b@foo:123'))
