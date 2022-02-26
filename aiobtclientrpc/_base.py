@@ -74,11 +74,6 @@ class RPCBase(abc.ABC):
 
     @property
     @abc.abstractmethod
-    def default_url(self):
-        """Default :attr:`url`"""
-
-    @property
-    @abc.abstractmethod
     def URL(self):
         """
         :class:`~.URL` subclass
@@ -96,14 +91,15 @@ class RPCBase(abc.ABC):
         Changing any of the properties will re-connect to the new URL on the
         next :meth:`~.call`.
 
-        If this property is set to a falsy value, :attr:`default_url` is used.
+        If this property is set to a falsy value, :attr:`~.URL.default` is
+        used.
 
         :raise ValueError: if set to an invalid URL
         """
         url = getattr(self, '_url', None)
         if not url:
             url = self._url = type(self).URL(
-                url=self.default_url,
+                url=type(self).URL.default,
                 on_change=self._invalidate_http_client,
             )
         return url
@@ -111,7 +107,7 @@ class RPCBase(abc.ABC):
     @url.setter
     def url(self, url):
         self._url = type(self).URL(
-            url=url if url else self.default_url,
+            url=url if url else type(self).URL.default,
             on_change=self._invalidate_http_client,
         )
         self._invalidate_http_client()

@@ -16,7 +16,6 @@ class MockURL(_utils.URL):
 class MockRPC(_base.RPCBase):
     name = 'mockbt'
     label = 'MockBT'
-    default_url = 'http://localhost:1234/rpc'
     URL = MockURL
 
     _connect = AsyncMock()
