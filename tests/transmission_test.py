@@ -5,7 +5,40 @@ import pytest
 
 from aiobtclientrpc import RPCBase, _errors, _transmission, _utils
 
-from .common import AsyncMock
+from .common import AsyncMock, make_url_parts
+
+
+@pytest.mark.parametrize(
+    argnames='url, exp',
+    argvalues=(
+        ('',
+         {'scheme': 'http', 'host': 'localhost', 'port': '9091', 'path': '/transmission/rpc', 'username': None, 'password': None}),
+        ('myhost',
+         {'scheme': 'http', 'host': 'myhost', 'port': '9091', 'path': '/transmission/rpc', 'username': None, 'password': None}),
+        ('myhost:123',
+         {'scheme': 'http', 'host': 'myhost', 'port': '123', 'path': '/transmission/rpc', 'username': None, 'password': None}),
+        ('myhost:123/my/path',
+         {'scheme': 'http', 'host': 'myhost', 'port': '123', 'path': '/my/path', 'username': None, 'password': None}),
+        ('myhost/my/path',
+         {'scheme': 'http', 'host': 'myhost', 'port': '9091', 'path': '/my/path', 'username': None, 'password': None}),
+        ('foo:bar@myhost',
+         {'scheme': 'http', 'host': 'myhost', 'port': '9091', 'path': '/transmission/rpc', 'username': 'foo', 'password': 'bar'}),
+        ('foo:bar@myhost:123',
+         {'scheme': 'http', 'host': 'myhost', 'port': '123', 'path': '/transmission/rpc', 'username': 'foo', 'password': 'bar'}),
+        ('https://myhost',
+         {'scheme': 'https', 'host': 'myhost', 'port': '9091', 'path': '/transmission/rpc', 'username': None, 'password': None}),
+        ('file://myhost',
+         _errors.ValueError('Scheme must be "http" or "https"')),
+    ),
+    ids=lambda v: str(v),
+)
+def test_TransmissionURL(url, exp):
+    if isinstance(exp, Exception):
+        with pytest.raises(type(exp), match=rf'^{re.escape(str(exp))}$'):
+            _transmission.TransmissionURL(url)
+    else:
+        url = _transmission.TransmissionURL(url)
+        assert make_url_parts(url) == exp
 
 
 @pytest.mark.parametrize('url', (None, 'http://a:b@foo:123/custom/path'))

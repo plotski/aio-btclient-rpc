@@ -1,9 +1,27 @@
 import json
 
-from . import _base, _errors
+from . import _base, _errors, _utils
 
 import logging  # isort:skip
 _log = logging.getLogger(__name__)
+
+
+class TransmissionURL(_utils.URL):
+    """Transmission RPC URL"""
+
+    default = 'http://localhost:9091/transmission/rpc'
+
+    @property
+    def scheme(self):
+        """Valid schemes: ``http``, ``https``"""
+        return super().scheme
+
+    @scheme.setter
+    def scheme(self, scheme):
+        if scheme and scheme.lower() not in ('http', 'https'):
+            raise _errors.ValueError('Scheme must be "http" or "https"')
+        else:
+            _utils.URL.scheme.fset(self, scheme)
 
 
 class TransmissionRPC(_base.RPCBase):
@@ -36,7 +54,7 @@ class TransmissionRPC(_base.RPCBase):
 
     name = 'transmission'
     label = 'Transmission'
-    default_url = 'http://localhost:9091/transmission/rpc'
+    URL = TransmissionURL
 
     def __init__(
         self,
