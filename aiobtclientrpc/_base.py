@@ -78,6 +78,17 @@ class RPCBase(abc.ABC):
         """Default :attr:`url`"""
 
     @property
+    @abc.abstractmethod
+    def URL(self):
+        """
+        :class:`~.URL` subclass
+
+        Setting properties on an instance of this subclass to invalid values
+        should raise :class:`~.ValueError`. For example, :class:`~.RtorrentURL`
+        only accepts the schemes ``http``, ``scgi`` or ``file``.
+        """
+
+    @property
     def url(self):
         """
         :class:`~.URL` to the RPC interface
@@ -91,7 +102,7 @@ class RPCBase(abc.ABC):
         """
         url = getattr(self, '_url', None)
         if not url:
-            url = self._url = _utils.URL(
+            url = self._url = type(self).URL(
                 url=self.default_url,
                 on_change=self._invalidate_http_client,
             )
@@ -99,7 +110,7 @@ class RPCBase(abc.ABC):
 
     @url.setter
     def url(self, url):
-        self._url = _utils.URL(
+        self._url = type(self).URL(
             url=url if url else self.default_url,
             on_change=self._invalidate_http_client,
         )

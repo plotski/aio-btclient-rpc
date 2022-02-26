@@ -9,10 +9,15 @@ from aiobtclientrpc import _base, _errors, _utils
 from .common import AsyncMock
 
 
+class MockURL(_utils.URL):
+    pass
+
+
 class MockRPC(_base.RPCBase):
     name = 'mockbt'
     label = 'MockBT'
     default_url = 'http://localhost:1234/rpc'
+    URL = MockURL
 
     _connect = AsyncMock()
     _disconnect = AsyncMock()
@@ -48,7 +53,7 @@ def test_timeout(timeout, exp_timeout, exp_exception, mocker):
 def test_url(attribute, mocker):
     rpc = MockRPC()
     mocker.patch.object(rpc, '_invalidate_http_client')
-    assert isinstance(rpc.url, _utils.URL)
+    assert isinstance(rpc.url, MockURL)
     assert rpc._invalidate_http_client.call_args_list == []
     setattr(rpc.url, attribute, '123')
     assert getattr(rpc.url, attribute) == '123'
