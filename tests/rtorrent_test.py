@@ -86,10 +86,10 @@ class AsyncIterator:
     argnames='kwargs',
     argvalues=(
         {},
-        {'scheme': 'asdf'},
+        {'scheme': 'https'},
         {'host': 'asdf'},
         {'port': '123'},
-        {'username': 'this', 'password': 'that'},
+        {'scheme': 'http', 'username': 'this', 'password': 'that'},
         {'timeout': 123},
         {'proxy_url': 'http://hey:ho@bar:456'},
     ),
@@ -100,8 +100,8 @@ def test_RtorrentRPC_instantiation(kwargs, url):
         kwargs['url'] = url
     rpc = _rtorrent.RtorrentRPC(**kwargs)
 
-    exp_url = _utils.URL(_rtorrent.RtorrentRPC.default_url)
-    default_url = _utils.URL(_rtorrent.RtorrentRPC.default_url)
+    default_url = _utils.URL(_rtorrent.RtorrentURL.default)
+    exp_url = _utils.URL(_rtorrent.RtorrentURL.default)
     if url:
         custom_url = _utils.URL(url)
     for name in ('scheme', 'host', 'port', 'path', 'username', 'password'):
@@ -125,7 +125,7 @@ def test_RtorrentRPC_instantiation(kwargs, url):
 @pytest.mark.parametrize(
     argnames='kwargs, exp_error',
     argvalues=(
-        ({'url': 'foo://bar:baz'}, 'Invalid port'),
+        ({'url': 'bar:baz'}, 'Invalid port'),
         ({'port': (1, 2, 3)}, 'Invalid port'),
         ({'timeout': 'never'}, 'Invalid timeout'),
         ({'proxy_url': 'foo://bar:baz'}, 'Invalid port'),

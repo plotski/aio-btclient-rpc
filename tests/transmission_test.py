@@ -46,7 +46,7 @@ def test_TransmissionURL(url, exp):
     argnames='kwargs',
     argvalues=(
         {},
-        {'scheme': 'asdf'},
+        {'scheme': 'https'},
         {'host': 'asdf'},
         {'port': '123'},
         {'path': 'some/path'},
@@ -61,11 +61,10 @@ def test_instantiation(kwargs, url):
         kwargs['url'] = url
     rpc = _transmission.TransmissionRPC(**kwargs)
 
-    exp_url = _utils.URL(_transmission.TransmissionRPC.default_url)
-    default_url = _utils.URL(_transmission.TransmissionRPC.default_url)
+    default_url = _utils.URL(_transmission.TransmissionURL.default)
+    exp_url = _utils.URL(_transmission.TransmissionURL.default)
     if url:
         custom_url = _utils.URL(url)
-
     for name in ('scheme', 'host', 'port', 'path', 'username', 'password'):
         if name in kwargs:
             exp_value = kwargs[name]
@@ -84,7 +83,7 @@ def test_instantiation(kwargs, url):
 @pytest.mark.parametrize(
     argnames='kwargs, exp_error',
     argvalues=(
-        ({'url': 'foo://bar:baz'}, 'Invalid port'),
+        ({'url': 'bar:baz'}, 'Invalid port'),
         ({'port': (1, 2, 3)}, 'Invalid port'),
         ({'timeout': 'never'}, 'Invalid timeout'),
         ({'proxy_url': 'foo://bar:baz'}, 'Invalid port'),

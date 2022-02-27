@@ -61,8 +61,8 @@ def test_DelugeRPC_instantiation(kwargs, url):
         kwargs['url'] = url
     rpc = _deluge.DelugeRPC(**kwargs)
 
-    exp_url = _utils.URL(_deluge.DelugeRPC.default_url)
-    default_url = _utils.URL(_deluge.DelugeRPC.default_url)
+    default_url = _utils.URL(_deluge.DelugeURL.default)
+    exp_url = _utils.URL(_deluge.DelugeURL.default)
     if url:
         custom_url = _utils.URL(url)
     for name in ('scheme', 'host', 'port', 'path', 'username', 'password'):
