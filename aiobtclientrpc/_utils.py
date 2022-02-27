@@ -169,7 +169,13 @@ class URL:
         default_url = self._dict_from_string(default or self.default)
         custom_url = self._dict_from_string(url)
         for name in ('scheme', 'username', 'password', 'host', 'port', 'path'):
-            setattr(self, name, custom_url[name] or default_url[name])
+            if custom_url[name]:
+                setattr(self, name, custom_url[name])
+            else:
+                try:
+                    setattr(self, name, default_url[name])
+                except _errors.ValueError:
+                    setattr(self, name, None)
 
         # Initial parsing is complete - enable on_change callback
         self._on_change = on_change
