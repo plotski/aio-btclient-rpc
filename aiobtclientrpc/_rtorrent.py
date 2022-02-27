@@ -28,26 +28,37 @@ class RtorrentURL(_utils.URL):
     @_utils.URL.host.setter
     def host(self, host):
         if host and self.scheme == 'file':
-            host = None
-        _utils.URL.host.fset(self, host)
+            raise _errors.ValueError(f"{self.scheme} URLs don't have a host")
+        else:
+            _utils.URL.host.fset(self, host)
 
     @_utils.URL.port.setter
     def port(self, port):
         if port and self.scheme == 'file':
-            port = None
-        _utils.URL.port.fset(self, port)
+            raise _errors.ValueError(f"{self.scheme} URLs don't have a port")
+        else:
+            _utils.URL.port.fset(self, port)
 
     @_utils.URL.username.setter
     def username(self, username):
         if username and self.scheme in ('file', 'scgi'):
-            username = None
-        _utils.URL.username.fset(self, username)
+            raise _errors.ValueError(f"{self.scheme} URLs don't have a username")
+        else:
+            _utils.URL.username.fset(self, username)
 
     @_utils.URL.password.setter
     def password(self, password):
         if password and self.scheme in ('file', 'scgi'):
-            password = None
-        _utils.URL.password.fset(self, password)
+            raise _errors.ValueError(f"{self.scheme} URLs don't have a password")
+        else:
+            _utils.URL.password.fset(self, password)
+
+    @_utils.URL.path.setter
+    def path(self, path):
+        if path and self.scheme == 'scgi':
+            raise _errors.ValueError(f"{self.scheme} URLs don't have a path")
+        else:
+            _utils.URL.path.fset(self, path)
 
 
 class RtorrentRPC(_base.RPCBase):

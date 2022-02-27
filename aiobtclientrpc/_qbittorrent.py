@@ -28,7 +28,10 @@ class QbittorrentURL(_utils.URL):
 
     @path.setter
     def path(self, path):
-        _utils.URL.path.fset(self, None)
+        if path:
+            raise _errors.ValueError("qBittorrent URLs don't have a path")
+        else:
+            _utils.URL.path.fset(self, path)
 
 
 class QbittorrentRPC(_base.RPCBase):

@@ -28,7 +28,7 @@ from .common import AsyncMock, make_url_parts
         ('file://myhost',
          _errors.ValueError('Scheme must be "http" or "https"')),
         ('myhost/foo',
-         {'scheme': 'http', 'host': 'myhost', 'port': '8080', 'path': None, 'username': None, 'password': None}),
+         _errors.ValueError("qBittorrent URLs don't have a path")),
     ),
     ids=lambda v: str(v),
 )

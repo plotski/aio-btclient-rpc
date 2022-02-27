@@ -20,7 +20,7 @@ class DelugeURL(_utils.URL):
     @scheme.setter
     def scheme(self, scheme):
         if scheme:
-            raise _errors.ValueError(f'Invalid scheme: {scheme}')
+            raise _errors.ValueError("Deluge URLs don't have a scheme")
         else:
             _utils.URL.scheme.fset(self, scheme)
 
@@ -31,7 +31,10 @@ class DelugeURL(_utils.URL):
 
     @path.setter
     def path(self, path):
-        _utils.URL.path.fset(self, None)
+        if path:
+            raise _errors.ValueError("Deluge URLs don't have a path")
+        else:
+            _utils.URL.path.fset(self, path)
 
 
 class DelugeRPC(_base.RPCBase):

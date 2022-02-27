@@ -35,10 +35,6 @@ from .common import AsyncMock, make_url_parts
          {'scheme': 'scgi', 'host': 'myhost', 'port': '123', 'path': None, 'username': None, 'password': None}),
         ('scgi://myhost:123',
          {'scheme': 'scgi', 'host': 'myhost', 'port': '123', 'path': None, 'username': None, 'password': None}),
-        ('scgi://foo:bar@myhost:123',
-         {'scheme': 'scgi', 'host': 'myhost', 'port': '123', 'path': None, 'username': None, 'password': None}),
-        ('scgi://myhost:123/some/path',
-         {'scheme': 'scgi', 'host': 'myhost', 'port': '123', 'path': '/some/path', 'username': None, 'password': None}),
 
         # HTTP(s)
         ('http://myhost:123',
@@ -52,9 +48,17 @@ from .common import AsyncMock, make_url_parts
         ('https://myhost/RPC/17',
          {'scheme': 'https', 'host': 'myhost', 'port': '5000', 'path': '/RPC/17', 'username': None, 'password': None}),
 
-        # Invalid
+        # Invalid scheme
         ('arf://myhost',
          _errors.ValueError('Scheme must be "file", "scgi", "http" or "https"')),
+
+        # Invalid scgi URL
+        ('scgi://foo:@myhost',
+         _errors.ValueError("scgi URLs don't have a username")),
+        ('scgi://:foo@myhost',
+         _errors.ValueError("scgi URLs don't have a password")),
+        ('scgi://myhost/this/is/a/path',
+         _errors.ValueError("scgi URLs don't have a path")),
     ),
     ids=lambda v: str(v),
 )
@@ -127,6 +131,7 @@ def test_RtorrentRPC_instantiation(kwargs, url):
     argvalues=(
         ({'url': 'bar:baz'}, 'Invalid port'),
         ({'port': (1, 2, 3)}, 'Invalid port'),
+        ({'scheme': 'file', 'host': 'localhost'}, "file URLs don't have a host"),
         ({'timeout': 'never'}, 'Invalid timeout'),
         ({'proxy_url': 'foo://bar:baz'}, 'Invalid port'),
     ),

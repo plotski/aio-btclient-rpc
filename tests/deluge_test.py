@@ -28,9 +28,9 @@ from .common import AsyncMock, make_url_parts
         ('foo:bar@myhost:123',
          {'scheme': None, 'host': 'myhost', 'port': '123', 'path': None, 'username': 'foo', 'password': 'bar'}),
         ('http://myhost',
-         _errors.ValueError('Invalid scheme: http')),
+         _errors.ValueError("Deluge URLs don't have a scheme")),
         ('myhost/foo',
-         {'scheme': None, 'host': 'myhost', 'port': '58846', 'path': None, 'username': None, 'password': None}),
+         _errors.ValueError("Deluge URLs don't have a path")),
     ),
     ids=lambda v: str(v),
 )
