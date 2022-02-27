@@ -1,3 +1,4 @@
+import sys
 from unittest.mock import Mock, call
 
 import pytest
@@ -70,6 +71,7 @@ async def test_add_torrents(as_file, paused, api, tmp_path):
         await api.client.disconnect()
 
 
+@pytest.mark.skipif(sys.version_info < (3, 8), reason='Avoid BrokenResourceError on Python 3.7')
 @pytest.mark.parametrize(
     argnames='start_proxy',
     argvalues=proxyserver.proxies,
