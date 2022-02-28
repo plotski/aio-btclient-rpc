@@ -139,6 +139,14 @@ class RPCBase(abc.ABC):
         """:class:`~.ConnectionStatus` enum"""
         return getattr(self, '_status', _utils.ConnectionStatus.disconnected)
 
+    @property
+    def is_connected(self):
+        """
+        `True` if :attr:`status: is :attr:`~.ConnectionStatus.connected`, `False`
+        otherwise
+        """
+        return self.status is _utils.ConnectionStatus.connected
+
     # Callbacks
 
     def set_connecting_callback(self, callback, *args, **kwargs):

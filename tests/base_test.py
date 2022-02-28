@@ -88,6 +88,19 @@ def test_status():
     rpc._status = _utils.ConnectionStatus.connected
     assert rpc.status is _utils.ConnectionStatus.connected
 
+@pytest.mark.parametrize(
+    argnames='status, exp_is_connected',
+    argvalues=(
+        (_utils.ConnectionStatus.connecting, False),
+        (_utils.ConnectionStatus.connected, True),
+        (_utils.ConnectionStatus.disconnected, False),
+    ),
+)
+def test_is_connected(status, exp_is_connected):
+    rpc = MockRPC()
+    rpc._status = status
+    assert rpc.is_connected is exp_is_connected
+
 
 @pytest.mark.parametrize('kwargs', ({}, {'foo': 'bar'}))
 @pytest.mark.parametrize('args', ((), (1, 2, 3)))
