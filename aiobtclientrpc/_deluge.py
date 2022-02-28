@@ -438,7 +438,7 @@ class _DelugeRPCRequest:
         return (self.id, self.method, self.args, self.kwargs)
 
     def __repr__(self):
-        text = f'ID#{self.id}:{self.method}('
+        text = f'{self.method}('
         posargs = ', '.join((repr(arg) for arg in self.args))
         kwargs = ', '.join((f'{k}={v!r}' for k, v in self.kwargs.items()))
         args = ', '.join((x for x in (posargs, kwargs) if x))

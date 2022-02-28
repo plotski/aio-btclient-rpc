@@ -814,7 +814,7 @@ async def test_DelugeRPCRequest_repr(kwargs, args):
         args=args,
         kwargs=kwargs,
     )
-    exp_repr = f'ID#{request.id}:{request.method}('
+    exp_repr = f'{request.method}('
     if args:
         exp_repr += ', '.join((f'{a!r}' for a in request.args))
     if kwargs:
