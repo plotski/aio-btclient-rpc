@@ -13,6 +13,7 @@ Features
 
 | Documentation: https://aio-btclient-rpc.readthedocs.io/
 | Repository: https://github.com/plotski/aio-btclient-rpc
+| Package: https://pypi.org/project/aio-btclient-rpc/
 
 Supported BitTorrent Clients
 ----------------------------
