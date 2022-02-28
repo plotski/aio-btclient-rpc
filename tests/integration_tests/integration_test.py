@@ -1,5 +1,7 @@
+import asyncio
 import sys
-from unittest.mock import Mock, call
+import time
+from unittest.mock import Mock, call, patch
 
 import pytest
 
@@ -123,6 +125,43 @@ async def test_proxy(start_proxy, api, tmp_path):
             raise
 
     _log.debug('client is now disconnected')
+
+
+@pytest.mark.asyncio
+async def test_timeout(api, tmp_path):
+    # Call the original client._call() method after a nap
+    def make_delayed_call(delay, real_call_method=api.client._call):
+        async def delayed_call(*args, **kwargs):
+            print(time.monotonic(), 'sleeping', delay, 'seconds')
+            await asyncio.sleep(delay)
+            print(time.monotonic(), 'calling', real_call_method)
+            return await real_call_method(*args, **kwargs)
+
+        return delayed_call
+
+    async def connect():
+        # Connect without delay
+        if not api.client.is_connected:
+            print(time.monotonic(), 'connecting')
+            await api.client.connect()
+            print(time.monotonic(), 'connected')
+
+    # We must connect now because we don't want any autoconnecting behaviour
+    # with artifically delayed responses as connect() performs an unpredictable
+    # amount of requests. We must set the timeout before connecting manually
+    # because it invalidates an existing connection.
+    api.client.timeout = 1
+    await connect()
+
+    try:
+        with patch.object(api.client, '_call', make_delayed_call(0.5)):
+            await api.perform_simple_request()
+
+        with patch.object(api.client, '_call', make_delayed_call(100)):
+            with pytest.raises(aiobtclientrpc.TimeoutError, match=rf'^Timeout after {api.client.timeout} seconds$'):
+                await api.perform_simple_request()
+    finally:
+        await api.client.disconnect()
 
 
 @pytest.mark.asyncio
