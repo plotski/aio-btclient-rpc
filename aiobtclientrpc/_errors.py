@@ -31,8 +31,12 @@ class ConnectionError(Error):
         super().__init__(msg)
 
 
-class TimeoutError(Error):
-    """Timeout for sending request and reading response"""
+class TimeoutError(Error, TimeoutError):
+    """
+    Timeout for sending request and reading response
+
+    Besides :class:`Error`, this is also a subclass of :class:`TimeoutError`.
+    """
 
 
 class AuthenticationError(Error):
@@ -43,5 +47,5 @@ class ValueError(Error, ValueError):
     """
     Invalid value (e.g. port 65536)
 
-    This is a subclass of :class:`Error` and :class:`ValueError`.
+    Besides :class:`Error`, this is also a subclass of :class:`ValueError`.
     """
