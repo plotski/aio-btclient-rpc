@@ -1,16 +1,15 @@
-``aiobtclientrpc`` provides low-level access to the RPC protocols of BitTorrent
-clients.
+``aio-btclient-rpc`` provides low-level access to the RPC protocols of
+BitTorrent clients. It is supposed to be the basis for a high-level library. If
+you want to use this directly, you need to read the documentation or source code
+of each client.
 
 Features
 --------
 
-* Connect automatically on first RPC method call
 * Tunnel the client connection through a proxy (SOCKS5, SOCKS4, HTTP tunnel)
+* Event handlers, e.g. when a torrent was added (Deluge only)
+* Connect automatically on any RPC method call
 * Keep track of the connection status and provide changes to a callback
-
-``aiobtclientrpc`` does not implement any useful RPC methods, e.g. to get a
-torrent list. You need to read the documentation or source code of the client
-you want to send commands to.
 
 | Documentation: https://aio-btclient-rpc.readthedocs.io/
 | Repository: https://github.com/plotski/aio-btclient-rpc
