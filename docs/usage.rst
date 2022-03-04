@@ -69,5 +69,5 @@ or higher.
 
 .. code-block:: python
 
-    import logging
-    logging.basicConfig(level=logging.DEBUG)
+   import logging
+   logging.getLogger('aiobtclientrpc').setLevel(logging.DEBUG)
