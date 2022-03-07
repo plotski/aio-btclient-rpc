@@ -75,7 +75,7 @@ class QbittorrentRPC(_base.RPCBase):
 
     >>> call(
     >>>     "torrents/info",
-    >>>     data={
+    >>>     options={
     >>>         "hashes": "|".join([
     >>>             "d5a34e9eb4709e265f0f03a1c8ab60890dcb94a9",
     >>>             "4435ef55af79b350e7b85d5b330a7886a61e3bdf",
@@ -101,7 +101,7 @@ class QbittorrentRPC(_base.RPCBase):
     >>>             'application/x-bittorrent',
     >>>         )),
     >>>     ],
-    >>>     data={
+    >>>     options={
     >>>         'savepath': 'special/download/path',
     >>>         'paused': 'true',
     >>>     },
@@ -163,10 +163,10 @@ class QbittorrentRPC(_base.RPCBase):
     async def _disconnect(self):
         await self._send_post_request(f'{self.url}/api/v2/auth/logout')
 
-    async def _call(self, method, data=None, files=None, **kwargs):
+    async def _call(self, method, options=None, files=None, **kwargs):
         # Merge dictionary arguments with keyword arguments
-        if data:
-            kwargs.update(data)
+        if options:
+            kwargs.update(options)
 
         # POST request expects "data" and "files" arguments
         send_post_request_kwargs = {}

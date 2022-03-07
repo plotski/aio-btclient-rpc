@@ -168,7 +168,7 @@ async def qbittorrent(**client_args):
                     open('./devtools/aiobtclientrpc.torrent', 'rb'),
                     'application/x-bittorrent',
                 ))],
-                data={'savepath': 'somewhere/else', 'paused': 'true'},
+                options={'savepath': 'somewhere/else', 'paused': 'true'},
             ),
             call('torrents/info'),
             call('torrents/info', hashes='d5a34e9eb4709e265f0f03a1c8ab60890dcb94a9|asdf'),

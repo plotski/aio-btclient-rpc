@@ -147,15 +147,12 @@ async def test_disconnect(exception, mocker):
 
 
 @pytest.mark.parametrize(
-    argnames='data, files, kwargs, exp_send_post_request_kwargs',
+    argnames='options, files, kwargs, exp_send_post_request_kwargs',
     argvalues=(
         (None, None, {}, {}),
-        ({'dict': 'data'}, {}, {},
-         {'data': {'dict': 'data'}}),
-        ({}, {'the': 'files'}, {},
-         {'files': {'the': 'files'}}),
-        ({}, {}, {'kw': 'data'},
-         {'data': {'kw': 'data'}}),
+        ({'dict': 'data'}, {}, {}, {'data': {'dict': 'data'}}),
+        ({}, {'the': 'files'}, {}, {'files': {'the': 'files'}}),
+        ({}, {}, {'kw': 'data'}, {'data': {'kw': 'data'}}),
         ({'dict': 'data'}, {'the': 'files'}, {},
          {'data': {'dict': 'data'}, 'files': {'the': 'files'}}),
         ({}, {'the': 'files'}, {'kw': 'data'},
@@ -168,7 +165,7 @@ async def test_disconnect(exception, mocker):
     ids=lambda v: str(v),
 )
 @pytest.mark.asyncio
-async def test_call_merges_arguments(data, files, kwargs, exp_send_post_request_kwargs, mocker):
+async def test_call_merges_arguments(options, files, kwargs, exp_send_post_request_kwargs, mocker):
     rpc = _qbittorrent.QbittorrentRPC()
     rpc.url = 'http://a:b@foo:123'
     method = 'do_this'
@@ -177,7 +174,7 @@ async def test_call_merges_arguments(data, files, kwargs, exp_send_post_request_
         return_value=Mock(status_code=200, json=Mock(return_value='mock json data')),
     ))
 
-    await rpc._call(method, data=data, files=files, **kwargs)
+    await rpc._call(method, options=options, files=files, **kwargs)
 
     assert rpc._send_post_request.call_args_list == [call(
         url=f'http://foo:123/api/v2/{method}',

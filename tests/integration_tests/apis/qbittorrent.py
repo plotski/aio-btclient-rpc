@@ -55,7 +55,7 @@ class API:
                     ))
                     for filepath in torrent_filepaths
                 ],
-                data={'savepath': download_path, 'paused': str(paused).lower()},
+                options={'savepath': download_path, 'paused': str(paused).lower()},
             )
         print('torrents/add:', result)
         assert result == 'Ok.', result

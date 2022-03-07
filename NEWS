@@ -1,2 +1,6 @@
+?.?.?
+  * QbittorrentRPC.call(): "data" argument has been renamed to "options"
+
+
 0.1.0
   * Initial release
