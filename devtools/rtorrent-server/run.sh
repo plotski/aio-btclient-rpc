@@ -66,6 +66,7 @@ function run_http_server() {
 	        location /RPC2 {
 	           include $nginxdir/scgi_params;
 	           scgi_pass unix:${socketfile};
+               client_body_temp_path ${workdir};
 	        }
 	    }
 	}
