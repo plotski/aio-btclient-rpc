@@ -26,7 +26,7 @@ async def run_tests(
     unknown_method,
 ):
 
-    async def cb():
+    def cb():
         print('::: Connection status changed to',  client.status)
 
     client.set_connecting_callback(cb)
