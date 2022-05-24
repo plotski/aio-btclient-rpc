@@ -108,7 +108,6 @@ class DelugeRPC(_base.RPCBase):
         self._client = _DelugeRPCClient(
             host=self.url.host,
             port=self.url.port,
-            timeout=self.timeout,
             on_connection_lost=self._on_connection_lost,
             proxy_url=self.proxy_url,
             event_handler=self._emit_event,
@@ -155,10 +154,9 @@ class DelugeRPC(_base.RPCBase):
 
 
 class _DelugeRPCClient:
-    def __init__(self, host, port, timeout, proxy_url=None, on_connection_lost=None, event_handler=None):
+    def __init__(self, host, port, proxy_url=None, on_connection_lost=None, event_handler=None):
         self._host = str(host)
         self._port = int(port)
-        self._timeout = float(timeout)
         self._on_connection_lost = on_connection_lost
         self._proxy_url = proxy_url
 
@@ -201,7 +199,12 @@ class _DelugeRPCClient:
                     raise _errors.ValueError(e)
 
                 try:
-                    sock = await proxy.connect(dest_host=self._host, dest_port=self._port)
+                    sock = await proxy.connect(
+                        dest_host=self._host,
+                        dest_port=self._port,
+                        # Timeouts are handled with async_timeout in RPCBase
+                        timeout=float('inf'),
+                    )
                 except python_socks.ProxyError as e:
                     raise _errors.ConnectionError(e)
 
@@ -210,6 +213,8 @@ class _DelugeRPCClient:
                     'server_hostname': self._host,
                     'protocol_factory': self._protocol_factory,
                     'ssl': self._create_ssl_context(),
+                    # Timeouts are handled with async_timeout in RPCBase
+                    'ssl_handshake_timeout': float('inf'),
                 }
             else:
                 create_connection_kwargs = {
@@ -217,6 +222,8 @@ class _DelugeRPCClient:
                     'port': self._port,
                     'protocol_factory': self._protocol_factory,
                     'ssl': self._create_ssl_context(),
+                    # Timeouts are handled with async_timeout in RPCBase
+                    'ssl_handshake_timeout': float('inf'),
                 }
 
             transport_, self._protocol = await _utils.catch_connection_exceptions(

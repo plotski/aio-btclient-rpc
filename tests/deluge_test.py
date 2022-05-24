@@ -109,7 +109,6 @@ async def test_DelugeRPC_connect(mocker):
         call._DelugeRPCClient(
             host=rpc.url.host,
             port=rpc.url.port,
-            timeout=rpc.timeout,
             on_connection_lost=rpc._on_connection_lost,
             proxy_url=rpc.proxy_url,
             event_handler=rpc._emit_event,
@@ -186,7 +185,7 @@ async def test_DelugeRPC_unsubscribe(mocker):
 
 
 async def test_DelugeRPCClient_connection_lost():
-    client = _deluge._DelugeRPCClient(host='localhost', port=123, timeout=10, on_connection_lost=Mock())
+    client = _deluge._DelugeRPCClient(host='localhost', port=123, on_connection_lost=Mock())
     client._protocol = 'foo'
     client._connection_lost()
     assert client._on_connection_lost.call_args_list == [call()]
@@ -196,7 +195,7 @@ async def test_DelugeRPCClient_connection_lost():
 @pytest.mark.parametrize('iscoroutinefunction', (True, False))
 @pytest.mark.asyncio
 async def test_DelugeRPCClient_event_received(iscoroutinefunction, mocker):
-    client = _deluge._DelugeRPCClient(host='localhost', port=123, timeout=10, event_handler=Mock())
+    client = _deluge._DelugeRPCClient(host='localhost', port=123, event_handler=Mock())
     mocker.patch.object(client, '_loop')
     mocker.patch('asyncio.iscoroutinefunction', return_value=iscoroutinefunction)
 
@@ -215,7 +214,7 @@ async def test_DelugeRPCClient_event_received(iscoroutinefunction, mocker):
 @pytest.mark.asyncio
 async def test_DelugeRPCClient_protocol_factory(mocker):
     DelugeRPCProtocol_mock = mocker.patch('aiobtclientrpc._deluge._DelugeRPCProtocol')
-    client = _deluge._DelugeRPCClient(host='localhost', port=123, timeout=10)
+    client = _deluge._DelugeRPCClient(host='localhost', port=123)
     protocol = client._protocol_factory()
     assert protocol is DelugeRPCProtocol_mock.return_value
     assert DelugeRPCProtocol_mock.call_args_list == [call(
@@ -226,7 +225,7 @@ async def test_DelugeRPCClient_protocol_factory(mocker):
 
 @pytest.mark.asyncio
 async def test_DelugeRPCClient_create_ssl_context():
-    client = _deluge._DelugeRPCClient(host='localhost', port=123, timeout=10)
+    client = _deluge._DelugeRPCClient(host='localhost', port=123)
     ctx = client._create_ssl_context()
     assert isinstance(ctx, ssl.SSLContext)
     assert ctx.check_hostname is False
@@ -235,7 +234,7 @@ async def test_DelugeRPCClient_create_ssl_context():
 
 @pytest.mark.asyncio
 async def test_DelugeRPCClient_login_when_already_logged_in(mocker):
-    client = _deluge._DelugeRPCClient(host='localhost', port=123, timeout=10)
+    client = _deluge._DelugeRPCClient(host='localhost', port=123)
     client._protocol = 'mock protocol'
 
     Proxy_from_url_mock = mocker.patch('python_socks.async_.asyncio.Proxy.from_url', return_value=Mock(
@@ -260,7 +259,6 @@ async def test_DelugeRPCClient_login_with_proxy_url(mocker):
     client = _deluge._DelugeRPCClient(
         host='localhost',
         port=123,
-        timeout=10,
         proxy_url=_utils.URL('socks5://localhost:456'),
     )
     client._protocol = None
@@ -280,13 +278,20 @@ async def test_DelugeRPCClient_login_with_proxy_url(mocker):
     await client.login('Username', 'Password')
 
     assert Proxy_from_url_mock.call_args_list == [call(client._proxy_url.with_auth)]
-    assert Proxy_from_url_mock.return_value.connect.call_args_list == [call(dest_host=client._host, dest_port=client._port)]
-    assert catch_connection_exceptions_mock.call_args_list == [call(client._loop.create_connection.return_value)]
+    assert Proxy_from_url_mock.return_value.connect.call_args_list == [call(
+        dest_host=client._host,
+        dest_port=client._port,
+        timeout=float('inf'),
+    )]
+    assert catch_connection_exceptions_mock.call_args_list == [call(
+        client._loop.create_connection.return_value,
+    )]
     assert client._loop.create_connection.call_args_list == [call(
         sock=Proxy_from_url_mock.return_value.connect.return_value,
         server_hostname=client._host,
         protocol_factory=client._protocol_factory,
         ssl=client._create_ssl_context.return_value,
+        ssl_handshake_timeout=float('inf'),
     )]
     assert client.call.call_args_list == [
         call('daemon.info'),
@@ -298,7 +303,6 @@ async def test_DelugeRPCClient_login_with_bad_proxy_url(mocker):
     client = _deluge._DelugeRPCClient(
         host='localhost',
         port=123,
-        timeout=10,
         proxy_url=_utils.URL('socks5://localhost:456'),
     )
     client._protocol = None
@@ -328,7 +332,6 @@ async def test_DelugeRPCClient_login_with_bad_proxy_connection(mocker):
     client = _deluge._DelugeRPCClient(
         host='localhost',
         port=123,
-        timeout=10,
         proxy_url=_utils.URL('socks5://localhost:456'),
     )
     client._protocol = None
@@ -349,7 +352,11 @@ async def test_DelugeRPCClient_login_with_bad_proxy_connection(mocker):
         await client.login('Username', 'Password')
 
     assert Proxy_from_url_mock.call_args_list == [call(client._proxy_url.with_auth)]
-    assert Proxy_from_url_mock.return_value.connect.call_args_list == [call(dest_host=client._host, dest_port=client._port)]
+    assert Proxy_from_url_mock.return_value.connect.call_args_list == [call(
+        dest_host=client._host,
+        dest_port=client._port,
+        timeout=float('inf'),
+    )]
     assert catch_connection_exceptions_mock.call_args_list == []
     assert client._loop.create_connection.call_args_list == []
     assert client.call.call_args_list == []
@@ -359,7 +366,6 @@ async def test_DelugeRPCClient_login_without_proxy_url(mocker):
     client = _deluge._DelugeRPCClient(
         host='localhost',
         port=123,
-        timeout=10,
     )
     client._protocol = None
 
@@ -385,6 +391,7 @@ async def test_DelugeRPCClient_login_without_proxy_url(mocker):
         port=client._port,
         protocol_factory=client._protocol_factory,
         ssl=client._create_ssl_context.return_value,
+        ssl_handshake_timeout=float('inf'),
     )]
     assert client.call.call_args_list == [
         call('daemon.info'),
@@ -395,7 +402,7 @@ async def test_DelugeRPCClient_login_without_proxy_url(mocker):
 @pytest.mark.parametrize('protocol', (None, Mock()))
 @pytest.mark.asyncio
 async def test_DelugeRPCClient_logout(protocol, mocker):
-    client = _deluge._DelugeRPCClient(host='localhost', port=123, timeout=10)
+    client = _deluge._DelugeRPCClient(host='localhost', port=123)
     mocker.patch.object(client, '_protocol', protocol)
     await client.logout()
     if protocol:
@@ -404,7 +411,7 @@ async def test_DelugeRPCClient_logout(protocol, mocker):
 
 @pytest.mark.asyncio
 async def test_DelugeRPCClient_call(mocker):
-    client = _deluge._DelugeRPCClient(host='localhost', port=123, timeout=10)
+    client = _deluge._DelugeRPCClient(host='localhost', port=123)
     mocker.patch.object(client, '_protocol', Mock(send_request=AsyncMock()))
     return_value = await client.call('mock_method', 1, 2, 3, a='b')
     assert return_value is client._protocol.send_request.return_value
