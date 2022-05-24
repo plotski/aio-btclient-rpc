@@ -338,9 +338,8 @@ def create_http_client(*, auth=(None, None), proxy_url=None):
     import httpx  # isort:skip
 
     kwargs = {
-        # Because not all transports are HTTP-based, timeouts are produced by
-        # the RPCBase class
-        'timeout': None,
+        # Timeouts are handled with async_timeout in RPCBase
+        'timeout': float('inf'),
         'headers': {
             'User-Agent': f'{__project_name__} {__version__}',
         },

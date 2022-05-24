@@ -528,7 +528,7 @@ def test_create_http_client(username, password, proxy_url, mocker):
     assert client is AsyncClient_mock.return_value
 
     exp_AsyncClient_kwargs = {
-        'timeout': None,
+        'timeout': float('inf'),
         'headers': {'User-Agent': f'{__project_name__} {__version__}'},
     }
     if username and password:
