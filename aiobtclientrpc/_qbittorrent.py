@@ -161,7 +161,8 @@ class QbittorrentRPC(_base.RPCBase):
             raise _errors.RPCError(response.text)
 
     async def _disconnect(self):
-        await self._send_post_request(f'{self.url}/api/v2/auth/logout')
+        if self.is_connected:
+            await self._send_post_request(f'{self.url}/api/v2/auth/logout')
 
     async def _call(self, method, options=None, files=None, **kwargs):
         # Merge dictionary arguments with keyword arguments

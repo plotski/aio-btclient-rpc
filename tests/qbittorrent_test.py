@@ -1,5 +1,5 @@
 import re
-from unittest.mock import Mock, call
+from unittest.mock import Mock, PropertyMock, call
 
 import pytest
 
@@ -128,22 +128,27 @@ async def test_connect(response, exp_exception, username, password, mocker):
         },
     )]
 
+@pytest.mark.parametrize('is_connected', (True, False))
 @pytest.mark.parametrize('exception', (None, _errors.ConnectionError('Something')))
 @pytest.mark.asyncio
-async def test_disconnect(exception, mocker):
+async def test_disconnect(exception, is_connected, mocker):
     rpc = _qbittorrent.QbittorrentRPC()
     rpc.url = 'http://a:b@foo:123'
 
+    mocker.patch.object(type(rpc), 'is_connected', PropertyMock(return_value=is_connected))
     mocker.patch.object(rpc, '_send_post_request', AsyncMock(side_effect=exception))
-    if exception:
+    if exception and is_connected:
         with pytest.raises(type(exception), match=rf'^{re.escape(str(exception))}$'):
             await rpc._disconnect()
     else:
         await rpc._disconnect()
 
-    assert rpc._send_post_request.call_args_list == [call(
-        'http://foo:123/api/v2/auth/logout',
-    )]
+    if is_connected:
+        assert rpc._send_post_request.call_args_list == [call(
+            'http://foo:123/api/v2/auth/logout',
+        )]
+    else:
+        assert rpc._send_post_request.call_args_list == []
 
 
 @pytest.mark.parametrize(
