@@ -339,7 +339,12 @@ class _ScgiHostTransport(_ScgiTransportBase):
                 proxy = python_socks.async_.asyncio.Proxy.from_url(self._proxy_url.with_auth)
             except ValueError as e:
                 raise _errors.ValueError(e)
-            sock = await proxy.connect(dest_host=self._host, dest_port=self._port)
+            sock = await proxy.connect(
+                dest_host=self._host,
+                dest_port=self._port,
+                # Timeouts are handled with async_timeout in RPCBase
+                timeout=float('inf'),
+            )
             open_connection_kwargs = {
                 'sock': sock,
             }
