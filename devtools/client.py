@@ -11,7 +11,11 @@ from unittest.mock import call
 import aiobtclientrpc as rpc
 
 
-logging.basicConfig(level=logging.DEBUG)
+logging.basicConfig(
+    level=logging.DEBUG,
+    format='%(asctime)s %(name)s %(message)s',
+    datefmt='%H:%M:%S',
+)
 _log = logging.getLogger(__name__)
 
 
