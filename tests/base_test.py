@@ -542,6 +542,7 @@ async def test_send_post_request(data, exp_kwargs, mocker):
     assert rpc._get_http_client.call_args_list == [call()]
     assert catch_connection_exceptions_mock.call_args_list == [call(client.post.return_value)]
     assert client.post.call_args_list == [call(
+        timeout=float('inf'),
         url='mock url',
         headers={'foo': 'bar'},
         files='mock files',

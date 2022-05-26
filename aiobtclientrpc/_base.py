@@ -489,6 +489,7 @@ class RPCBase(abc.ABC):
         client = await self._get_http_client()
         return await _utils.catch_connection_exceptions(
             client.post(
+                timeout=float('inf'),
                 url=url,
                 headers=self._http_headers,
                 data=data,
