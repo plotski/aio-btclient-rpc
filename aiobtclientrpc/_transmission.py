@@ -28,7 +28,7 @@ class TransmissionRPC(_base.RPCBase):
     """
     RPC client for Transmission
 
-    URL format: http[s]://[USERNAME:PASSWORD@]HOST:PORT[/PATH]
+    URL format: ``http[s]://[USERNAME:PASSWORD@]HOST:PORT[/PATH]``
 
     Reference: https://github.com/transmission/transmission/blob/master/extras/rpc-spec.txt
 
@@ -36,14 +36,14 @@ class TransmissionRPC(_base.RPCBase):
 
     RPC methods can be called like python functions:
 
-    >>> client.call('torrent-add', filename='path/to.torrent', paused=True)
+    >>> client.call("torrent-add", filename="path/to.torrent", paused=True)
 
     If you need to pass argument names that contain characters that are illegal
     for keyword arguments (e.g. "-"), provide a dictionary:
 
     >>> client.call(
-        'torrent-add',
-        {'filename': 'file.torrent', 'download-dir': '/some/path'},
+        "torrent-add",
+        {"filename": "file.torrent", "download-dir": "/some/path"},
     )
 
     If you provide keyword arguments and a dictionary, values from the

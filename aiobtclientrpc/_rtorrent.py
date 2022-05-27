@@ -66,9 +66,9 @@ class RtorrentRPC(_base.RPCBase):
     RPC client for rTorrent
 
     URL formats:
-        * http[s]://[USERNAME:PASSWORD@]HOST:PORT[/PATH]
-        * scgi://HOST:PORT[/PATH]
-        * file://[SOCKET PATH]
+        * ``http[s]://[USERNAME:PASSWORD@]HOST:PORT[/PATH]``
+        * ``scgi://HOST:PORT[/PATH]``
+        * ``file://[SOCKET PATH]``
 
     References:
         * https://github.com/rakshasa/rtorrent/wiki/rTorrent-0.9-Comprehensive-Command-list-(WIP)

@@ -41,7 +41,7 @@ class DelugeRPC(_base.RPCBase):
     """
     RPC client for Deluge
 
-    URL format: http[s]://[USERNAME:PASSWORD@]HOST:PORT
+    URL format: ``[USERNAME:PASSWORD@]HOST:PORT``
 
     References:
         https://deluge.readthedocs.io/en/latest/reference/index.html
