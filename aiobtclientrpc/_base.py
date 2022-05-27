@@ -86,7 +86,7 @@ class RPCBase(abc.ABC):
     @property
     def url(self):
         """
-        :class:`~.URL` to the RPC interface
+        :class:`~.URL` of the RPC interface
 
         Changing any of the properties will re-connect to the new URL on the
         next :meth:`~.call`.

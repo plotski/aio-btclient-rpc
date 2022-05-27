@@ -91,7 +91,7 @@ def cached_property(fget):
 
 class URL:
     """
-    URL to an RPC interface
+    URL of an RPC interface
 
     This implementation attempts to parse URLs more intuitively instead of
     following any specs. For example ``"localhost:1234"`` is interpreted as
@@ -333,7 +333,7 @@ def create_http_client(*, auth=(None, None), proxy_url=None):
 
     :param auth: Basic auth credentials as `(username, password)` tuple; if
         either value is falsy, don't do authentication
-    :param proxy_url: URL to a SOCKS4, SOCKS5 or HTTP proxy
+    :param proxy_url: URL of a SOCKS4, SOCKS5 or HTTP proxy
     """
     import httpx  # isort:skip
 
