@@ -1,3 +1,7 @@
+?.?.?
+  * Fix timeouts longer than 60 seconds
+
+
 1.0.0
   * QbittorrentRPC.call(): "data" argument has been renamed to "options"
 
