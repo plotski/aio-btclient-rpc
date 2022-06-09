@@ -227,6 +227,46 @@ async def test_RtorrentRPC_call(raised_exception, exp_exception, mocker):
     assert rpc._xmlrpc.call.call_args_list == [call(method, *args)]
 
 
+@pytest.mark.parametrize(
+    argnames='supported_methods, candidates, exp_method, exp_exception',
+    argvalues=(
+        (
+            ('foo', 'bar', 'baz'),
+            ('bar', 'baz'),
+            'bar',
+            None,
+        ),
+        (
+            ('foo', 'bar', 'baz'),
+            ('asdf', 'f00'),
+            None,
+            _errors.ValueError("Unsupported method(s): 'asdf', 'f00'"),
+        ),
+    ),
+    ids=lambda v: str(v),
+)
+@pytest.mark.asyncio
+async def test_RtorrentRPC_get_supported_method(supported_methods, candidates, exp_method, exp_exception, mocker):
+    rpc = _rtorrent.RtorrentRPC()
+    mocker.patch.object(rpc, 'call', AsyncMock(return_value=supported_methods))
+
+    if not type(rpc)._supported_methods:
+        exp_calls = [call('system.listMethods')]
+    else:
+        exp_calls = []
+
+    if exp_exception:
+        with pytest.raises(type(exp_exception), match=rf'^{re.escape(str(exp_exception))}$'):
+            await rpc.get_supported_method(*candidates)
+    else:
+        # Multiple get_supported_method() calls, but only one "system.list_method" request
+        for _ in range(3):
+            return_value = await rpc.get_supported_method(*candidates)
+            assert return_value == exp_method
+
+    assert rpc.call.call_args_list == exp_calls
+
+
 @pytest.mark.parametrize('proxy_url', (None, _utils.URL('http://proxy.local')))
 @pytest.mark.parametrize(
     argnames='url, exp_transport, exp_exception',

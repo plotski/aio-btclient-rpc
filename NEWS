@@ -1,5 +1,7 @@
 ?.?.?
   * Fix timeouts longer than 60 seconds
+  * RtorrentRPC.get_supported_method() returns first supported method from a
+    sequence of candidates
 
 
 1.0.0

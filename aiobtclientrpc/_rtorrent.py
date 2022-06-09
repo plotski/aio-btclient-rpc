@@ -146,6 +146,25 @@ class RtorrentRPC(_base.RPCBase):
         except xmlrpc.client.Fault as e:
             raise _errors.RPCError(e.faultString)
 
+    _supported_methods = ()
+
+    async def get_supported_method(self, *candidates):
+        """
+        Get first supported method from multiple candidates
+
+        :param candidates: Sequence of method names
+
+        :raise ValueError: if no method name in `candidates` is supported
+        """
+        if not self._supported_methods:
+            type(self)._supported_methods = await self.call('system.listMethods')
+
+        for method in candidates:
+            if method in self._supported_methods:
+                return method
+
+        raise _errors.ValueError('Unsupported method(s): ' + ', '.join(f'{c!r}' for c in candidates))
+
 
 class _AsyncServerProxy:
     def __init__(self, url, proxy_url=None):
