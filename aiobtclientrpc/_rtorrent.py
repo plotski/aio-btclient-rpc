@@ -146,6 +146,73 @@ class RtorrentRPC(_base.RPCBase):
         except xmlrpc.client.Fault as e:
             raise _errors.RPCError(e.faultString)
 
+    async def multicall(self, *calls, raise_errors=True, as_dict=False):
+        """
+        Make ``system.multicall`` RPC request
+
+        :param calls: ``(method, parameter1, parameter2, ...)`` tuples
+        :param bool raise_errors: Whether to raise the first error response as
+            :class:`~.RPCError` or return it like a normal response
+        :param bool as_dict: Whether to map method names to return values
+
+            .. note:: Every method can only be called once if this is enabled.
+
+        :raise RPCError: if `raise_errors` is `True` and any response contains a
+            dictionary with a ``faultString`` key
+
+        :return: :class:`list` or :class:`dict` of return values
+        """
+        def pretty_call(i):
+            method = calls[i][0]
+            params = ', '.join(f'{param!r}' for param in calls[i][1:])
+            return f'{method}({params})'
+
+        if as_dict:
+            # Because method names are dictionary keys, every method can only be
+            # called once.
+            methods = [call[0] for call in calls]
+            indexes_map = {
+                method: [i for i in range(len(methods))
+                         if methods[i] == method]
+                for method in methods
+            }
+            for method, indexes in indexes_map.items():
+                if len(indexes) > 1:
+                    calls = ', '.join(pretty_call(i) for i in indexes)
+                    raise RuntimeError(f'Multiple {method} calls: {calls}')
+
+        responses = await self.call('system.multicall', [
+            {'methodName': method, 'params': params}
+            for method, *params in calls
+        ])
+
+        return_values = []
+        for i in range(len(responses)):
+            response = responses[i]
+
+            if isinstance(response, dict) and 'faultString' in response:
+                exc = _errors.RPCError(str(response['faultString']))
+                if raise_errors:
+                    raise exc
+                else:
+                    return_values.append(exc)
+
+            elif isinstance(response, list) and len(response) == 1:
+                return_values.append(response[0])
+
+            else:
+                raise RuntimeError(f'Unexpected response: {response!r}')
+
+        assert len(return_values) == len(calls)
+
+        if as_dict:
+            return {
+                method: return_value
+                for (method, *params), return_value in zip(calls, return_values)
+            }
+        else:
+            return return_values
+
     _supported_methods = ()
 
     async def get_supported_method(self, *candidates):

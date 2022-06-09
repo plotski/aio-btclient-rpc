@@ -228,6 +228,75 @@ async def test_RtorrentRPC_call(raised_exception, exp_exception, mocker):
 
 
 @pytest.mark.parametrize(
+    argnames='calls, responses, kwargs, exp_result, exp_system_multicall_called',
+    argvalues=(
+        (
+            [('foo', 'a', 'b'), ['bar'], ('baz', 123, '456'), ('foo', 'f00')],
+            [['first response'], {'faultString': 'Bad!'}, [789], ['00']],
+            {'raise_errors': False},
+            ['first response', _errors.RPCError('Bad!'), 789, '00'],
+            True,
+        ),
+        (
+            [('foo', 'a', 'b'), ['bar'], ('baz', 123, '456'), ('foo', 'f00')],
+            [['first response'], [['b', 'a', 'r']], {'faultString': 'Bad!'}, ['00']],
+            {'raise_errors': True},
+            _errors.RPCError('Bad!'),
+            True,
+        ),
+        (
+            [('foo', 'a', 'b'), ['bar'], ('baz', 123, '456'), ('foo', 'f00')],
+            [['first response'], {'faultString': 'Bad!'}, [789], ['00']],
+            {'raise_errors': False, 'as_dict': True},
+            RuntimeError("Multiple foo calls: foo('a', 'b'), foo('f00')"),
+            False,
+        ),
+        (
+            [('foo', 'a', 'b'), ['bar'], ('baz', 123, '456')],
+            [['first response'], {'faultString': 'Bad!'}, [789]],
+            {'raise_errors': False, 'as_dict': True},
+            {'foo': 'first response', 'bar': _errors.RPCError('Bad!'), 'baz': 789},
+            True,
+        ),
+        (
+            [('foo', 'a', 'b'), ['bar'], ('baz', 123, '456')],
+            [['first response'], {'faultString': 'Bad!'}, [789]],
+            {'raise_errors': True, 'as_dict': True},
+            _errors.RPCError('Bad!'),
+            True,
+        ),
+        (
+            [('foo', 'a', 'b'), ['bar'], ('baz', 123, '456')],
+            [['first response'], 'unexpected return value', [789]],
+            {},
+            RuntimeError("Unexpected response: 'unexpected return value'"),
+            True,
+        ),
+    ),
+    ids=lambda v: str(v),
+)
+@pytest.mark.asyncio
+async def test_RtorrentRPC_multicall(calls, responses, kwargs, exp_result, exp_system_multicall_called, mocker):
+    rpc = _rtorrent.RtorrentRPC()
+    mocker.patch.object(rpc, 'call', AsyncMock(return_value=responses))
+
+    if isinstance(exp_result, Exception):
+        with pytest.raises(type(exp_result), match=rf'^{re.escape(str(exp_result))}$'):
+            await rpc.multicall(*calls, **kwargs)
+    else:
+        return_value = await rpc.multicall(*calls, **kwargs)
+        assert return_value == exp_result
+
+    if exp_system_multicall_called:
+        assert rpc.call.call_args_list == [call('system.multicall', [
+            {'methodName': method, 'params': params}
+            for method, *params in calls
+        ])]
+    else:
+        assert rpc.call.call_args_list == []
+
+
+@pytest.mark.parametrize(
     argnames='supported_methods, candidates, exp_method, exp_exception',
     argvalues=(
         (
