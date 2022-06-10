@@ -141,8 +141,8 @@ async def test_request(method, tag, parameters, exp_json, exp_exception, mocker)
             _errors.AuthenticationError('Authentication failed'),
         ),
         (
-            [Mock(status_code=123)],
-            _errors.RPCError('Failed to connect'),
+            [Mock(status_code=123, __repr__=lambda self: 'the response')],
+            RuntimeError('Unexpected response: the response'),
         ),
         (
             [Mock(status_code=200)],

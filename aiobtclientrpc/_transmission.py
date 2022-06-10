@@ -126,7 +126,7 @@ class TransmissionRPC(_base.RPCBase):
             raise _errors.AuthenticationError('Authentication failed')
 
         elif response.status_code != 200:
-            raise _errors.RPCError('Failed to connect')
+            raise RuntimeError(f'Unexpected response: {response!r}')
 
     async def _disconnect(self):
         # Forget CSRF header
