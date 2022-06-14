@@ -1,5 +1,6 @@
 ?.?.?
   * Fix timeouts longer than 60 seconds
+  * RPCError.translate() maps regular expressions to better exceptions
   * RtorrentRPC.get_supported_method() returns first supported method from a
     sequence of candidates
   * RtorrentRPC.multicall() makes "system.multicall" requests more convenient
