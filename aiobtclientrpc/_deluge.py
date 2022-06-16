@@ -66,6 +66,10 @@ class DelugeRPC(_base.RPCBase):
     names by grepping for the class name ``DelugeEvent``. The names of
     subclasses of ``DelugeEvent`` are also event names.
 
+    .. warning:: The Deluge daemon does not complain about invalid event names
+        and silently accepts subscribtions to anything. Check your event names
+        carefully!
+
     :raise ValueError: if any argument is invalid
     """
 
