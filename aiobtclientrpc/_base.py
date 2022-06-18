@@ -364,7 +364,7 @@ class RPCBase(abc.ABC):
 
     async def add_event_handler(self, event, handler, autoremove=False):
         """
-        Call callable on event
+        Call callable when event happens
 
         :param event: Name or other identifier of the event (refer to the client
             documentation for valid values)
@@ -375,7 +375,10 @@ class RPCBase(abc.ABC):
 
         If `handler` is already registered for `event`, do nothing.
 
-        :raise NotImplementedError: If the client doesn't support events
+        Multiple handlers can be registered for the same event. They will be
+        called in the order they are added.
+
+        :raise NotImplementedError: if the client doesn't support events
         """
         assert callable(handler), handler
 
@@ -395,13 +398,13 @@ class RPCBase(abc.ABC):
 
     async def remove_event_handler(self, event, handler):
         """
-        Stop calling callable on event
+        Stop calling callable when event happens
 
         See :meth:`add_event_handler`.
 
         If `handler` is not registered for `event`, do nothing.
 
-        :raise NotImplementedError: If the client doesn't support events
+        :raise NotImplementedError: if the client doesn't support events
         """
         event_handlers = self._event_handlers[event]
 
