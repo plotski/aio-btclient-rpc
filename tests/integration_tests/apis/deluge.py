@@ -29,7 +29,7 @@ class API:
             print('torrent added:', infohash, from_state_)
             torrents_added.append(infohash)
 
-        await self.client.set_event_handler('TorrentAddedEvent', on_torrent_added)
+        await self.client.add_event_handler('TorrentAddedEvent', on_torrent_added)
 
         # Add torrents (as_file is ignored because Deluge doesn't accept file
         # paths)
@@ -66,4 +66,4 @@ class API:
     async def on_torrent_added(self, handler):
         def handler_wrapper(infohash, *args, **kwargs):
             handler(infohash)
-        await self.client.set_event_handler('TorrentAddedEvent', handler_wrapper)
+        await self.client.add_event_handler('TorrentAddedEvent', handler_wrapper)

@@ -115,7 +115,7 @@ def test_connection_callbacks(name, args, kwargs):
     with pytest.raises(AssertionError):
         getattr(rpc, f'unset_{name}_callback')('not callable')
 
-    # Register callback
+    # Add callback
     callbacks = (Mock(), Mock(), Mock())
     for cb in callbacks:
         getattr(rpc, f'set_{name}_callback')(cb, *args, **kwargs)
@@ -130,7 +130,7 @@ def test_connection_callbacks(name, args, kwargs):
     assert callbacks[1].call_args_list == [call(*args, **kwargs)]
     assert callbacks[2].call_args_list == [call(*args, **kwargs)]
 
-    # Deregister callback
+    # Remove callback
     getattr(rpc, f'unset_{name}_callback')(callbacks[1])
 
     # Call all available callbacks
@@ -293,51 +293,51 @@ async def test_call(status, exp_connect_calls, raised_exception, exp_exception, 
 
 
 @pytest.mark.asyncio
-async def test_set_event_handler_only_accepts_callable_handlers(mocker):
+async def test_add_event_handler_only_accepts_callable_handlers(mocker):
     rpc = MockRPC()
     mocker.patch.object(rpc, '_subscribe', AsyncMock())
     with pytest.raises(AssertionError, match='^not callable$'):
-        await rpc.set_event_handler('foo', 'not callable')
+        await rpc.add_event_handler('foo', 'not callable')
     assert rpc._subscribe.call_args_list == []
     assert rpc._event_handlers == {}
 
 @pytest.mark.asyncio
-async def test_set_event_handler_subscribes_to_event(mocker):
+async def test_add_event_handler_subscribes_to_event(mocker):
     rpc = MockRPC()
     mocker.patch.object(rpc, '_subscribe', AsyncMock())
-    await rpc.set_event_handler('foo', Mock())
+    await rpc.add_event_handler('foo', Mock())
     assert rpc._subscribe.call_args_list == [call('foo')]
-    await rpc.set_event_handler('bar', Mock())
+    await rpc.add_event_handler('bar', Mock())
     assert rpc._subscribe.call_args_list == [call('foo'), call('bar')]
-    await rpc.set_event_handler('foo', Mock())
+    await rpc.add_event_handler('foo', Mock())
     assert rpc._subscribe.call_args_list == [call('foo'), call('bar')]
-    await rpc.set_event_handler('bar', Mock())
+    await rpc.add_event_handler('bar', Mock())
     assert rpc._subscribe.call_args_list == [call('foo'), call('bar')]
-    await rpc.set_event_handler('baz', Mock())
+    await rpc.add_event_handler('baz', Mock())
     assert rpc._subscribe.call_args_list == [call('foo'), call('bar'), call('baz')]
 
 @pytest.mark.asyncio
-async def test_set_event_handler_associates_handler_with_event(mocker):
+async def test_add_event_handler_associates_handler_with_event(mocker):
     rpc = MockRPC()
     mocker.patch.object(rpc, '_subscribe', AsyncMock())
     rpc._event_handlers.clear()
     handler1, handler2 = Mock(), Mock()
 
-    await rpc.set_event_handler('foo', handler1)
+    await rpc.add_event_handler('foo', handler1)
     assert rpc._event_handlers == {'foo': [handler1]}
-    await rpc.set_event_handler('foo', handler2)
+    await rpc.add_event_handler('foo', handler2)
     assert rpc._event_handlers == {'foo': [handler1, handler2]}
-    await rpc.set_event_handler('foo', handler1)
+    await rpc.add_event_handler('foo', handler1)
     assert rpc._event_handlers == {'foo': [handler1, handler2]}
-    await rpc.set_event_handler('bar', handler1)
+    await rpc.add_event_handler('bar', handler1)
     assert rpc._event_handlers == {'foo': [handler1, handler2], 'bar': [handler1]}
-    await rpc.set_event_handler('bar', handler2)
+    await rpc.add_event_handler('bar', handler2)
     assert rpc._event_handlers == {'foo': [handler1, handler2], 'bar': [handler1, handler2]}
-    await rpc.set_event_handler('bar', handler2)
+    await rpc.add_event_handler('bar', handler2)
     assert rpc._event_handlers == {'foo': [handler1, handler2], 'bar': [handler1, handler2]}
 
 @pytest.mark.asyncio
-async def test_set_event_handler_with_autoremove(mocker):
+async def test_add_event_handler_with_autoremove(mocker):
     rpc = MockRPC()
     mocker.patch.object(rpc, '_subscribe', AsyncMock())
     rpc._event_handlers.clear()
@@ -347,19 +347,19 @@ async def test_set_event_handler_with_autoremove(mocker):
         side_effect=lambda handler, callback: f'{handler.id}.ref',
     ))
 
-    await rpc.set_event_handler('foo', handler1, autoremove=True)
+    await rpc.add_event_handler('foo', handler1, autoremove=True)
     assert rpc._event_handlers == {'foo': ['h1.ref']}
     assert ref_mock.call_args_list == [
         call(handler1, rpc._event_handlers['foo'].remove),
     ]
 
-    await rpc.set_event_handler('foo', handler2, autoremove=False)
+    await rpc.add_event_handler('foo', handler2, autoremove=False)
     assert rpc._event_handlers == {'foo': ['h1.ref', handler2]}
     assert ref_mock.call_args_list == [
         call(handler1, rpc._event_handlers['foo'].remove),
     ]
 
-    await rpc.set_event_handler('bar', handler3, autoremove=False)
+    await rpc.add_event_handler('bar', handler3, autoremove=False)
     assert rpc._event_handlers == {'foo': ['h1.ref', handler2], 'bar': [handler3]}
     assert ref_mock.call_args_list == [
         call(handler1, rpc._event_handlers['foo'].remove),
@@ -367,7 +367,7 @@ async def test_set_event_handler_with_autoremove(mocker):
 
     # Adding the same handler with autoremove multiple times
     for i in range(1, 4):
-        await rpc.set_event_handler('bar', handler2, autoremove=True)
+        await rpc.add_event_handler('bar', handler2, autoremove=True)
         assert rpc._event_handlers == {'foo': ['h1.ref', handler2], 'bar': [handler3, 'h2.ref']}
         assert ref_mock.call_args_list == [
             call(handler1, rpc._event_handlers['foo'].remove),
@@ -377,30 +377,30 @@ async def test_set_event_handler_with_autoremove(mocker):
 
 
 @pytest.mark.asyncio
-async def test_unset_event_handler(mocker):
+async def test_remove_event_handler(mocker):
     rpc = MockRPC()
     mocker.patch.object(rpc, '_unsubscribe', AsyncMock())
     handler1, handler2, handler_ = Mock(), Mock(), Mock()
     rpc._event_handlers.clear()
     rpc._event_handlers.update({'foo': [handler1, handler2], 'bar': [handler2]})
 
-    await rpc.unset_event_handler('foo', handler_)
+    await rpc.remove_event_handler('foo', handler_)
     assert rpc._event_handlers == {'foo': [handler1, handler2], 'bar': [handler2]}
     assert rpc._unsubscribe.call_args_list == []
 
-    await rpc.unset_event_handler('bar', handler_)
+    await rpc.remove_event_handler('bar', handler_)
     assert rpc._event_handlers == {'foo': [handler1, handler2], 'bar': [handler2]}
     assert rpc._unsubscribe.call_args_list == []
 
-    await rpc.unset_event_handler('foo', handler1)
+    await rpc.remove_event_handler('foo', handler1)
     assert rpc._event_handlers == {'foo': [handler2], 'bar': [handler2]}
     assert rpc._unsubscribe.call_args_list == []
 
-    await rpc.unset_event_handler('foo', handler2)
+    await rpc.remove_event_handler('foo', handler2)
     assert rpc._event_handlers == {'bar': [handler2]}
     assert rpc._unsubscribe.call_args_list == [call('foo')]
 
-    await rpc.unset_event_handler('bar', handler2)
+    await rpc.remove_event_handler('bar', handler2)
     assert rpc._event_handlers == {}
     assert rpc._unsubscribe.call_args_list == [call('foo'), call('bar')]
 

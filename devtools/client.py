@@ -96,7 +96,7 @@ async def deluge(**client_args):
     def handle_torrent_added(*args, **kwargs):
         print(':::::: [EVENT] Torrent added:', args, kwargs)
 
-    await client.set_event_handler('TorrentAddedEvent', handle_torrent_added)
+    await client.add_event_handler('TorrentAddedEvent', handle_torrent_added)
 
     await run_tests(
         client=client,

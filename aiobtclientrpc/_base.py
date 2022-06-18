@@ -362,7 +362,7 @@ class RPCBase(abc.ABC):
     def _event_handlers(self):
         return collections.defaultdict(lambda: [])
 
-    async def set_event_handler(self, event, handler, autoremove=False):
+    async def add_event_handler(self, event, handler, autoremove=False):
         """
         Call callable on event
 
@@ -393,11 +393,11 @@ class RPCBase(abc.ABC):
                 self._event_handlers[event].append(handler)
                 _log.debug('Added handler for event %r: %r', event, handler)
 
-    async def unset_event_handler(self, event, handler):
+    async def remove_event_handler(self, event, handler):
         """
         Stop calling callable on event
 
-        See :meth:`set_event_handler`.
+        See :meth:`add_event_handler`.
 
         If `handler` is not registered for `event`, do nothing.
 
