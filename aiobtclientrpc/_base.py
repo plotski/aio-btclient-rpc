@@ -1,6 +1,7 @@
 import abc
 import asyncio
 import collections
+import weakref
 
 import async_timeout
 
@@ -361,7 +362,7 @@ class RPCBase(abc.ABC):
     def _event_handlers(self):
         return collections.defaultdict(lambda: [])
 
-    async def set_event_handler(self, event, handler):
+    async def set_event_handler(self, event, handler, autoremove=False):
         """
         Call callable on event
 
@@ -369,6 +370,8 @@ class RPCBase(abc.ABC):
             documentation for valid values)
         :param handler: Callable to be called when `event` happens (refer to the
             client documentation for the call signature)
+        :param autoremove: Whether `handler` should be unregistered
+            automatically after it is garbage collected (see :mod:`weakref`)
 
         If `handler` is already registered for `event`, do nothing.
 
@@ -379,9 +382,16 @@ class RPCBase(abc.ABC):
         if event not in self._event_handlers:
             await self._subscribe(event)
 
-        if handler not in self._event_handlers[event]:
-            self._event_handlers[event].append(handler)
-            _log.debug('Added handler for event %r: %r', event, handler)
+        if autoremove:
+            handler_ref = weakref.ref(handler, self._event_handlers[event].remove)
+            if handler_ref not in self._event_handlers[event]:
+                self._event_handlers[event].append(handler_ref)
+                _log.debug('Added handler reference for event %r: %r', event, handler_ref)
+
+        else:
+            if handler not in self._event_handlers[event]:
+                self._event_handlers[event].append(handler)
+                _log.debug('Added handler for event %r: %r', event, handler)
 
     async def unset_event_handler(self, event, handler):
         """
@@ -410,7 +420,17 @@ class RPCBase(abc.ABC):
         args = args or ()
         kwargs = kwargs or {}
         for handler in self._event_handlers[event]:
-            _log.debug('Handling event %r with %r', event, handler)
+            # `handler` is a weakref.ref instance if it was registered with
+            # `autoremove=True`.
+            if isinstance(handler, weakref.ref):
+                handler = handler()
+                if handler is None:
+                    continue
+
+            # NOTE: If we pass `handler` to _log.debug() here, it will keep
+            #       another reference to `handler` and the test that covers dead
+            #       weakrefs will fail.
+
             if asyncio.iscoroutinefunction(handler):
                 await handler(*args, **kwargs)
             else:

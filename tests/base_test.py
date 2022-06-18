@@ -1,5 +1,7 @@
 import asyncio
+import collections
 import re
+import weakref
 from unittest.mock import Mock, PropertyMock, call
 
 import pytest
@@ -334,6 +336,45 @@ async def test_set_event_handler_associates_handler_with_event(mocker):
     await rpc.set_event_handler('bar', handler2)
     assert rpc._event_handlers == {'foo': [handler1, handler2], 'bar': [handler1, handler2]}
 
+@pytest.mark.asyncio
+async def test_set_event_handler_with_autoremove(mocker):
+    rpc = MockRPC()
+    mocker.patch.object(rpc, '_subscribe', AsyncMock())
+    rpc._event_handlers.clear()
+    handler1, handler2, handler3 = Mock(id='h1'), Mock(id='h2'), Mock(id='h3')
+
+    ref_mock = mocker.patch('weakref.ref', Mock(
+        side_effect=lambda handler, callback: f'{handler.id}.ref',
+    ))
+
+    await rpc.set_event_handler('foo', handler1, autoremove=True)
+    assert rpc._event_handlers == {'foo': ['h1.ref']}
+    assert ref_mock.call_args_list == [
+        call(handler1, rpc._event_handlers['foo'].remove),
+    ]
+
+    await rpc.set_event_handler('foo', handler2, autoremove=False)
+    assert rpc._event_handlers == {'foo': ['h1.ref', handler2]}
+    assert ref_mock.call_args_list == [
+        call(handler1, rpc._event_handlers['foo'].remove),
+    ]
+
+    await rpc.set_event_handler('bar', handler3, autoremove=False)
+    assert rpc._event_handlers == {'foo': ['h1.ref', handler2], 'bar': [handler3]}
+    assert ref_mock.call_args_list == [
+        call(handler1, rpc._event_handlers['foo'].remove),
+    ]
+
+    # Adding the same handler with autoremove multiple times
+    for i in range(1, 4):
+        await rpc.set_event_handler('bar', handler2, autoremove=True)
+        assert rpc._event_handlers == {'foo': ['h1.ref', handler2], 'bar': [handler3, 'h2.ref']}
+        assert ref_mock.call_args_list == [
+            call(handler1, rpc._event_handlers['foo'].remove),
+        ] + [
+            call(handler2, rpc._event_handlers['bar'].remove),
+        ] * i
+
 
 @pytest.mark.asyncio
 async def test_unset_event_handler(mocker):
@@ -365,7 +406,7 @@ async def test_unset_event_handler(mocker):
 
 
 @pytest.mark.asyncio
-async def test_emit_event(mocker):
+async def test_emit_event_makes_calls_in_order(mocker):
     rpc = MockRPC()
     mocker.patch.object(rpc, '_unsubscribe', AsyncMock())
     mocks = Mock()
@@ -390,6 +431,62 @@ async def test_emit_event(mocker):
         call.handler3(4, 5, 6, hey='ho'),
         call.handler4(4, 5, 6, hey='ho'),
     ]
+
+@pytest.mark.asyncio
+async def test_emit_event_handles_weak_references(mocker):
+    rpc = MockRPC()
+    mocker.patch.object(rpc, '_unsubscribe', AsyncMock())
+
+    calls = collections.defaultdict(lambda: [])
+
+    def handler1(*args, **kwargs):
+        calls['handler1'].append(call(*args, **kwargs))
+
+    async def handler2(*args, **kwargs):
+        calls['handler2'].append(call(*args, **kwargs))
+
+    def handler3(*args, **kwargs):
+        calls['handler3'].append(call(*args, **kwargs))
+
+    async def handler4(*args, **kwargs):
+        calls['handler4'].append(call(*args, **kwargs))
+
+    rpc._event_handlers.clear()
+    rpc._event_handlers.update({
+        'foo': [handler1, weakref.ref(handler2)],
+        'bar': [weakref.ref(handler3), handler4],
+    })
+
+    await rpc._emit_event('foo', (1, 2, 3), {'this': 'that'})
+    assert dict(calls) == {
+        'handler1': [call(1, 2, 3, this='that')],
+        'handler2': [call(1, 2, 3, this='that')],
+    }
+    await rpc._emit_event('bar', (4, 5, 6), {'hey': 'ho'})
+    assert dict(calls) == {
+        'handler1': [call(1, 2, 3, this='that')],
+        'handler2': [call(1, 2, 3, this='that')],
+        'handler3': [call(4, 5, 6, hey='ho')],
+        'handler4': [call(4, 5, 6, hey='ho')],
+    }
+
+    del handler1
+    del handler2
+    del handler3
+    del handler4
+    for name in ('handler1', ' handler2', ' handler3', ' handler4'):
+        assert name not in locals()
+    calls.clear()
+
+    await rpc._emit_event('foo', (1, 2, 3), {'this': 'that'})
+    assert dict(calls) == {
+        'handler1': [call(1, 2, 3, this='that')],
+    }
+    await rpc._emit_event('bar', (2, 3, 4), {'yo': 'bro'})
+    assert dict(calls) == {
+        'handler1': [call(1, 2, 3, this='that')],
+        'handler4': [call(2, 3, 4, yo='bro')],
+    }
 
 
 def test_event_handlers(mocker):
