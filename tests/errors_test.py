@@ -1,9 +1,6 @@
-from unittest.mock import Mock, call
-
 import pytest
 
 from aiobtclientrpc import _errors
-
 
 rpc_exception_map = {
     r'^The environment is perfectly safe$': ValueError(r'RUN FOR YOUR LIVES!'),
