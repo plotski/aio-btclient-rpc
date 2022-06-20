@@ -196,3 +196,35 @@ async def test_event_subscriptions_survive_reconnecting(api, tmp_path):
             call(infohashes[0]),
             call(infohashes[1]),
         ]
+
+
+@pytest.mark.asyncio
+async def test_waiting_for_event(api, tmp_path):
+    infohashes = sorted([
+        '4435ef55af79b350e7b85d5b330a7886a61e3bdf',
+        'd5a34e9eb4709e265f0f03a1c8ab60890dcb94a9',
+    ])
+
+    async with api.client:
+        coros = [
+            api.wait_for_torrent_added(),
+            api.add_torrent_files(
+                torrent_filepaths=[
+                    common.get_torrent_filepath(infohash)
+                    for infohash in infohashes
+                ],
+            ),
+        ]
+
+        return_values = await asyncio.gather(*coros, return_exceptions=True)
+        assert len(return_values) == 2
+        wait_for_torrent_added_return_value = return_values[0]
+        add_torrent_files_return_value = return_values[1]
+
+        if wait_for_torrent_added_return_value is not None:
+            assert type(wait_for_torrent_added_return_value) is NotImplementedError
+            assert str(wait_for_torrent_added_return_value) == f'Events are not supported for {api.client.label}'
+            pytest.skip(str(wait_for_torrent_added_return_value))
+
+        else:
+            assert add_torrent_files_return_value == infohashes

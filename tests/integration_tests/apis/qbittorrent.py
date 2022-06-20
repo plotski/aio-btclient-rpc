@@ -82,3 +82,7 @@ class API:
     async def on_torrent_added(self, handler):
         # Raise NotImplementedError
         await self.client.add_event_handler('<event name>', handler)
+
+    async def wait_for_torrent_added(self):
+        # Raise NotImplementedError
+        await self.client.wait_for_event('<event name>')

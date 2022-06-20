@@ -428,13 +428,18 @@ class RPCBase(abc.ABC):
         :raise NotImplementedError: if the client doesn't support events
         """
         blocker = asyncio.Event()
-        await self.add_event_handler(event, blocker.set)
+
+        def unblock_blocker(*_, **__):
+            blocker.set()
+
+        await self.add_event_handler(event, unblock_blocker)
+
         try:
             _log.debug('Waiting for event: %r', event)
             await blocker.wait()
             _log.debug('Done waiting for event: %r', event)
         finally:
-            await self.remove_event_handler(event, blocker.set)
+            await self.remove_event_handler(event, unblock_blocker)
 
     async def _emit_event(self, event, args=None, kwargs=None):
         # This function is called by subclasses when they receive an event

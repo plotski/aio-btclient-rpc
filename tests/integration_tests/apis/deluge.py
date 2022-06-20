@@ -67,3 +67,6 @@ class API:
         def handler_wrapper(infohash, *args, **kwargs):
             handler(infohash)
         await self.client.add_event_handler('TorrentAddedEvent', handler_wrapper)
+
+    async def wait_for_torrent_added(self):
+        await self.client.wait_for_event('TorrentAddedEvent')

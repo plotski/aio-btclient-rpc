@@ -408,38 +408,30 @@ async def test_remove_event_handler(mocker):
 @pytest.mark.parametrize('wait_fails', (True, False))
 @pytest.mark.asyncio
 async def test_wait_for_event(wait_fails, mocker):
-    rpc = MockRPC()
     event_name = 'foo'
-    Event_mock = mocker.patch('asyncio.Event', return_value=Mock(
-        set=Mock(),
-        wait=AsyncMock(),
-    ))
+    rpc = MockRPC()
+    mocker.patch.object(rpc, '_subscribe', AsyncMock())
+    mocker.patch.object(rpc, '_unsubscribe', AsyncMock())
 
-    def wait_side_effect():
-        assert Event_mock.call_args_list == [call()]
-        assert rpc.add_event_handler.call_args_list == [
-            call(event_name, Event_mock.return_value.set),
-        ]
-        assert rpc.remove_event_handler.call_args_list == []
-
-        if wait_fails:
-            raise RuntimeError('Something went wrong')
-
-    Event_mock.return_value.wait.side_effect = wait_side_effect
-
-    mocker.patch.object(rpc, 'add_event_handler', AsyncMock())
-    mocker.patch.object(rpc, 'remove_event_handler', AsyncMock())
+    if wait_fails:
+        Event_mock = mocker.patch('asyncio.Event', return_value=Mock(
+            set=Mock(),
+            wait=AsyncMock(side_effect=RuntimeError('Something went wrong')),
+        ))
 
     rpc._event_handlers.clear()
 
+    asyncio.create_task(rpc._emit_event(event_name, (1, 2, 3), {'this': 'that'}))
     if wait_fails:
         with pytest.raises(Exception):
             await rpc.wait_for_event(event_name)
     else:
         await rpc.wait_for_event(event_name)
 
-    assert Event_mock.return_value.wait.call_args_list == [call()]
-    assert rpc.remove_event_handler.call_args_list == [call(event_name, Event_mock.return_value.set)]
+    if wait_fails:
+        assert Event_mock.call_args_list == [call()]
+    assert rpc._subscribe.call_args_list == [call(event_name)]
+    assert rpc._unsubscribe.call_args_list == [call(event_name)]
     assert rpc._event_handlers == {}
 
 
