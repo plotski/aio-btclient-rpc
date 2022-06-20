@@ -15,9 +15,6 @@ def get_aioloop():
     # https://docs.python.org/3.10/library/asyncio-eventloop.html
     try:
         return asyncio.get_running_loop()
-    except AttributeError:
-        # Python 3.6 doesn't have get_running_loop()
-        return asyncio.get_event_loop()
     except RuntimeError:
         # "no running event loop"
         # We need a loop before the application has started. We can't use
