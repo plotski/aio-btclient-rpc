@@ -418,6 +418,24 @@ class RPCBase(abc.ABC):
             await self._unsubscribe(event)
             _log.debug('Removed handler for event %r: %r', event, handler)
 
+    async def wait_for_event(self, event):
+        """
+        Block until event happens
+
+        :param event: Name or other identifier of the event (refer to the client
+            documentation for valid values)
+
+        :raise NotImplementedError: if the client doesn't support events
+        """
+        blocker = asyncio.Event()
+        await self.add_event_handler(event, blocker.set)
+        try:
+            _log.debug('Waiting for event: %r', event)
+            await blocker.wait()
+            _log.debug('Done waiting for event: %r', event)
+        finally:
+            await self.remove_event_handler(event, blocker.set)
+
     async def _emit_event(self, event, args=None, kwargs=None):
         # This function is called by subclasses when they receive an event
         args = args or ()
