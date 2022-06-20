@@ -443,19 +443,39 @@ class RPCBase(abc.ABC):
         for handler in self._event_handlers[event]:
             # `handler` is a weakref.ref instance if it was registered with
             # `autoremove=True`.
+            #
+            # NOTE: If we pass `handler` to _log.debug() here, it will keep
+            #       another strong reference to `handler` and the test that
+            #       covers dead weakrefs will fail.
             if isinstance(handler, weakref.ref):
                 handler = handler()
                 if handler is None:
                     continue
 
-            # NOTE: If we pass `handler` to _log.debug() here, it will keep
-            #       another reference to `handler` and the test that covers dead
-            #       weakrefs will fail.
+            # Because this method is likely being called by some background task
+            # that is waiting for events, any exception raised by `handler` will
+            # go unnoticed, so we stop the loop if that happens.
+            # There should be a better way to handle this, but I can't find it.
+            try:
+                if asyncio.iscoroutinefunction(handler):
+                    await handler(*args, **kwargs)
+                else:
+                    handler(*args, **kwargs)
 
-            if asyncio.iscoroutinefunction(handler):
-                await handler(*args, **kwargs)
-            else:
-                handler(*args, **kwargs)
+            except BaseException as e:
+                try:
+                    loop = asyncio.get_running_loop()
+                except RuntimeError:
+                    # Loop is already stopped
+                    pass
+                else:
+                    _log.debug('Stopping loop because event handler for %r '
+                               'threw an exception: %r', event, e)
+                    loop.stop()
+
+                # We probably raise this into the void, but not raising
+                # BaseException is really bad.
+                raise
 
     async def _subscribe(self, event):
         # Tell the client to send us a certain type of event

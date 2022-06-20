@@ -526,6 +526,33 @@ async def test_emit_event_handles_weak_references(mocker):
         'handler4': [call(2, 3, 4, yo='bro')],
     }
 
+@pytest.mark.parametrize(
+    argnames='event_handler, exception, get_running_loop',
+    argvalues=(
+        (Mock(), ValueError('Wat?'), Mock()),
+        (Mock(), ValueError('Wat?'), Mock(side_effect=RuntimeError('No running loop'))),
+        (AsyncMock(), ValueError('Wat?'), Mock()),
+        (AsyncMock(), ValueError('Wat?'), Mock(side_effect=RuntimeError('No running loop'))),
+    ),
+)
+@pytest.mark.asyncio
+async def test_emit_event_catches_exceptions_from_handler(event_handler, exception, get_running_loop, mocker):
+    rpc = MockRPC()
+    rpc._event_handlers.clear()
+    rpc._event_handlers.update({
+        'foo': [event_handler],
+    })
+    event_handler.side_effect = exception
+    mocker.patch('asyncio.get_running_loop', get_running_loop)
+
+    with pytest.raises(type(exception), match=rf'^{re.escape(str(exception))}$'):
+        await rpc._emit_event('foo', (1, 2, 3), {'this': 'that'})
+
+    if get_running_loop.side_effect:
+        assert get_running_loop.return_value.stop.call_args_list == []
+    else:
+        assert get_running_loop.return_value.stop.call_args_list == [call()]
+
 
 def test_event_handlers(mocker):
     rpc = MockRPC()
