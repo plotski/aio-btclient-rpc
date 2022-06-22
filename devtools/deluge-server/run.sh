@@ -7,7 +7,6 @@ else
 fi
 
 set -o nounset   # Don't allow unset variables
-set -o errexit   # Exit if any command fails
 
 homedir="$(realpath "$(dirname "$0")")"
 workdir=/tmp/deluge.aiobtclientrpc
