@@ -28,7 +28,7 @@ class RPCError(Error):
         :param map: Mapping of regular expression strings to target exception
             instances
 
-        Each regular expression is matched aagainst the errors message of the
+        Each regular expression is matched aagainst the error message of the
         instance (i.e. `str(self)`). The corresponding target exception of the
         first matching regular expression is returned.
 
