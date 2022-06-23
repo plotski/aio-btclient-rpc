@@ -4,8 +4,8 @@ from aiobtclientrpc import _errors
 
 rpc_exception_map = {
     r'^The environment is perfectly safe$': ValueError(r'RUN FOR YOUR LIVES!'),
-    r'^The (\w+) fell (\w+)$': ValueError(r'\1: I fell \2!'),
-    r'^A (?P<what>\w+) hit the (?P<who>\w+)$': ValueError(r'\g<who>: I was hit by a \g<what>!'),
+    r'^The (\w+) fell (\w+)$': (ValueError, r'\1: I fell \2!'),
+    r'^A (?P<what>\w+) hit the (?P<who>\w+)$': (ValueError, r'\g<who>: I was hit by a \g<what>!'),
 }
 
 @pytest.mark.parametrize(

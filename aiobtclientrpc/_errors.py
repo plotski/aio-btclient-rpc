@@ -29,30 +29,43 @@ class RPCError(Error):
             instances
 
         Each regular expression is matched aagainst the error message of the
-        instance (i.e. `str(self)`). The corresponding target exception of the
+        instance (i.e. ``str(self)``). The corresponding target exception of the
         first matching regular expression is returned.
 
-        If there are no matches, the instance (`self`) is returned.
-
-        If the matching target exception contains a backslash, it is expected to
-        contain references to groups in the regular expression. In that case, a
-        new target exception is created from the message gained by filling in
-        these group references.
-
-        >>> RPCError('foo is bad').translate({
-        >>>     r'^(\w+) is (\w+)$': ValueError(r'\2: \1'),
+        >>> RPCError("foo is bad").translate({
+        >>>     r"^foo": ValueError("Foo is something"),
+        >>>     r"is bad$": TypeError("Something is bad"),
         >>> })
         ValueError('bad: Foo')
+
+        If there are no matches, the instance (``self``) is returned.
+
+        >>> RPCError("foo is bad").translate({
+        >>>     r"Hello?": ValueError("Anybody out there?"),
+        >>> })
+        RPCError("foo is bad")
+
+        If the matching target exception is a ``(exception_class, message)``
+        tuple, any group references in ``message`` are substituted with the
+        groups from the matching regular expression and
+        ``exception_class(message_with_group_substitutions)`` is returned.
+
+        >>> for e in (RPCError("foo is bad"), RPCError("bar is bad"), RPCError("bar is silly")):
+        >>>     e.translate({
+        >>>         r"^(\w+) is (\w+)$": (ValueError, r"\2: \1"),
+        >>>     })
+        ValueError('bad: foo')
+        ValueError('bad: bar')
+        ValueError('silly: bar')
         """
         self_msg = str(self)
         for regex, to_exc in map.items():
             match = re.search(regex, self_msg)
             if match:
-                to_msg = str(to_exc)
-                if '\\' in to_msg:
-                    # Fill in group references (\1, \g<1>, \g<name>)
-                    to_msg = re.sub(regex, to_msg, self_msg)
-                    return type(to_exc)(to_msg)
+                if isinstance(to_exc, tuple) and len(to_exc) == 2:
+                    to_cls, to_msg = to_exc
+                    # Substitute group references (\1, \g<1>, \g<name>)
+                    return to_cls(re.sub(regex, to_msg, self_msg))
                 else:
                     return to_exc
         return self
