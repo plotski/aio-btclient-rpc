@@ -64,8 +64,8 @@ class RPCError(Error):
             if match:
                 if isinstance(to_exc, tuple) and len(to_exc) == 2:
                     to_cls, to_msg = to_exc
-                    # Substitute group references (\1, \g<1>, \g<name>)
-                    return to_cls(re.sub(regex, to_msg, self_msg))
+                    # Replace group references (\1, \g<1>, \g<name>) in `to_msg`
+                    return to_cls(match.expand(to_msg))
                 else:
                     return to_exc
         return self

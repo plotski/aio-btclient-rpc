@@ -6,6 +6,7 @@ rpc_exception_map = {
     r'^The environment is perfectly safe$': ValueError(r'RUN FOR YOUR LIVES!'),
     r'^The (\w+) fell (\w+)$': (ValueError, r'\1: I fell \2!'),
     r'^A (?P<what>\w+) hit the (?P<who>\w+)$': (ValueError, r'\g<who>: I was hit by a \g<what>!'),
+    r'\{([^\}]*?)\}': (ValueError, r'<\1>'),
 }
 
 @pytest.mark.parametrize(
@@ -21,6 +22,9 @@ rpc_exception_map = {
         (_errors.RPCError('A wave hit the ship'), ValueError(r'ship: I was hit by a wave!')),
         (_errors.RPCError('A whale hit the blimp'), ValueError(r'blimp: I was hit by a whale!')),
         (_errors.RPCError('A whale punched the blimp'), _errors.RPCError('A whale punched the blimp')),
+
+        (_errors.RPCError('Some {text with} braces'), ValueError(r'<text with>')),
+        (_errors.RPCError('Some {text} with {braces}'), ValueError(r'<text>')),
     ),
     ids=lambda v: repr(v),
 )
