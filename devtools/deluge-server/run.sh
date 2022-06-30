@@ -1,9 +1,9 @@
 #!/bin/bash
 
-if [ "$1" = "--frontend" ]; then
-    frontend=true
+if [ "$1" = "--ui" ]; then
+    run_ui=true
 else
-    frontend=false
+    run_ui=false
 fi
 
 set -o nounset   # Don't allow unset variables
@@ -85,7 +85,7 @@ cat <<-EOF > "$configdir/hostlist.conf"
 }
 EOF
 
-if [ "$frontend" = "true" ]; then
+if [ "$run_ui" = "true" ]; then
     deluge-gtk --config "$configdir" &
     delugegtk_pid="$!"
 else
