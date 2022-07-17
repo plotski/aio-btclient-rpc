@@ -248,8 +248,8 @@ class RPCBase(abc.ABC):
         will become the first call, i.e. it will attempt to connect while the
         others wait for it.
 
-        :raise AuthenticationError: if authentication failed
         :raise ConnectionError: if the request failed
+        :raise AuthenticationError: if authentication failed
         :raise TimeoutError: if there is no response after :attr:`timeout` seconds
         :raise RPCError: if there is any miscommunication between us and the RPC
             interface
@@ -298,7 +298,7 @@ class RPCBase(abc.ABC):
         :attr:`status` is always :attr:`.ConnectionStatus.disconnected` when
         this method returns, regardless of any raised exceptions.
 
-        :raise ConnectionError: if the request failed
+        :raise AuthenticationError: if authentication failed
         :raise TimeoutError: if there is no response after :attr:`timeout` seconds
         :raise RPCError: if there is any miscommunication between us and the RPC
             interface
