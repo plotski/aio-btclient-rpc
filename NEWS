@@ -4,6 +4,8 @@
   * RtorrentRPC.get_supported_method() returns first supported method from a
     sequence of candidates
   * RtorrentRPC.multicall() makes "system.multicall" requests more convenient
+  * QbittorrentRPC.disconnect().: Doesn't raise ConnectionError (other
+    exceptions are still raised)
 
 
 1.0.0

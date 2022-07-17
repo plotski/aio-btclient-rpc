@@ -162,7 +162,10 @@ class QbittorrentRPC(_base.RPCBase):
 
     async def _disconnect(self):
         if self.is_connected:
-            await self._send_post_request(f'{self.url}/api/v2/auth/logout')
+            try:
+                await self._send_post_request(f'{self.url}/api/v2/auth/logout')
+            except _errors.ConnectionError as e:
+                _log.debug('Client unreachable while logging out: %r', e)
 
     async def _call(self, method, options=None, files=None, **kwargs):
         # Merge dictionary arguments with keyword arguments

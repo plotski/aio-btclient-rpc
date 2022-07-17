@@ -129,7 +129,13 @@ async def test_connect(response, exp_exception, username, password, mocker):
     )]
 
 @pytest.mark.parametrize('is_connected', (True, False))
-@pytest.mark.parametrize('exception', (None, _errors.ConnectionError('Something')))
+@pytest.mark.parametrize('exception', (
+    None,
+    _errors.ConnectionError('Ignored'),
+    _errors.TimeoutError('Raised'),
+    _errors.AuthenticationError('Raised'),
+    RuntimeError('Raised'),
+))
 @pytest.mark.asyncio
 async def test_disconnect(exception, is_connected, mocker):
     rpc = _qbittorrent.QbittorrentRPC()
@@ -137,7 +143,7 @@ async def test_disconnect(exception, is_connected, mocker):
 
     mocker.patch.object(type(rpc), 'is_connected', PropertyMock(return_value=is_connected))
     mocker.patch.object(rpc, '_send_post_request', AsyncMock(side_effect=exception))
-    if exception and is_connected:
+    if is_connected and exception and not isinstance(exception, _errors.ConnectionError):
         with pytest.raises(type(exception), match=rf'^{re.escape(str(exception))}$'):
             await rpc._disconnect()
     else:
