@@ -112,9 +112,9 @@ def test_instantiation_with_invalid_argument(kwargs, exp_error):
     ),
 )
 @pytest.mark.asyncio
-async def test_request(method, tag, parameters, exp_json, exp_exception, mocker):
+async def test_request_sends_and_receives_expected_data(method, tag, parameters, exp_json, exp_exception, mocker):
     rpc = _transmission.TransmissionRPC()
-    mocker.patch.object(rpc, '_send_post_request', AsyncMock(return_value='mock response'))
+    mocker.patch.object(rpc, '_send_post_request', AsyncMock(return_value=Mock(status_code=200)))
 
     if exp_exception:
         with pytest.raises(type(exp_exception), match=rf'^{re.escape(str(exp_exception))}$'):
@@ -128,40 +128,71 @@ async def test_request(method, tag, parameters, exp_json, exp_exception, mocker)
 
 
 @pytest.mark.parametrize(
-    argnames='responses, exp_exception',
+    argnames='responses, exp_send_request_call_count, exp_exception',
     argvalues=(
         (
-            [Mock(status_code=_transmission.TransmissionRPC._csrf_error_code,
-                  headers={_transmission.TransmissionRPC._csrf_header: 'd34db33f'}),
-             Mock(status_code=200)],
-            None,
+            [
+                Mock(status_code=_transmission.TransmissionRPC._csrf_error_code,
+                     headers={_transmission.TransmissionRPC._csrf_header: 'd34db33f'}),
+                Mock(status_code=200),
+            ],
+            2,
+            None
         ),
         (
-            [Mock(status_code=_transmission.TransmissionRPC._auth_error_code)],
+            [
+                Mock(status_code=_transmission.TransmissionRPC._csrf_error_code,
+                     headers={_transmission.TransmissionRPC._csrf_header: 'd34db33f'}),
+                Mock(status_code=_transmission.TransmissionRPC._csrf_error_code,
+                     headers={_transmission.TransmissionRPC._csrf_header: 'd34db33f'},
+                     __repr__=Mock(return_value='this should be HTTP status code 200')),
+                Mock(status_code=200),
+            ],
+            2,
+            RuntimeError('Unexpected response: this should be HTTP status code 200'),
+        ),
+        (
+            [
+                Mock(status_code=_transmission.TransmissionRPC._auth_error_code),
+                Mock(status_code=200),
+            ],
+            1,
             _errors.AuthenticationError('Authentication failed'),
         ),
         (
-            [Mock(status_code=123, __repr__=lambda self: 'the response')],
-            RuntimeError('Unexpected response: the response'),
-        ),
-        (
-            [Mock(status_code=200)],
-            None,
+            [
+                Mock(status_code=123, __repr__=Mock(return_value='unexpected HTTP status code')),
+            ],
+            1,
+            RuntimeError('Unexpected response: unexpected HTTP status code'),
         ),
     ),
+    ids=lambda v: repr(v),
 )
 @pytest.mark.asyncio
-async def test_connect(responses, exp_exception, mocker):
+async def test_request_handles_HTTP_status_codes(responses, exp_send_request_call_count, exp_exception, mocker):
     rpc = _transmission.TransmissionRPC()
-    mocker.patch.object(rpc, '_request', AsyncMock(side_effect=responses))
+    mocker.patch.object(rpc, '_send_post_request', AsyncMock(side_effect=responses))
 
     if exp_exception:
         with pytest.raises(type(exp_exception), match=rf'^{re.escape(str(exp_exception))}$'):
-            await rpc._connect()
-        assert rpc._request.call_args_list == [call('session-stats')] * len(responses)
+            await rpc._request('foo')
     else:
-        await rpc._connect()
-        assert rpc._request.call_args_list == [call('session-stats')] * len(responses)
+        return_value = await rpc._request('foo')
+        assert return_value is responses[-1]
+
+    assert rpc._send_post_request.call_args_list == [
+        call(str(rpc.url), data='{"method": "foo"}'),
+    ] * exp_send_request_call_count
+
+
+@pytest.mark.asyncio
+async def test_connect(mocker):
+    rpc = _transmission.TransmissionRPC()
+    mocker.patch.object(rpc, '_request', AsyncMock())
+    await rpc._connect()
+    assert rpc._request.call_args_list == [call('session-stats')]
+
 
 @pytest.mark.asyncio
 async def test_disconnect():

@@ -89,6 +89,10 @@ class TransmissionRPC(_base.RPCBase):
         self.timeout = timeout
         self.proxy_url = proxy_url
 
+    _auth_error_code = 401
+    _csrf_error_code = 409
+    _csrf_header = 'X-Transmission-Session-Id'
+
     async def _request(self, method, tag=None, **parameters):
         data = {'method': str(method)}
         if parameters:
@@ -104,29 +108,26 @@ class TransmissionRPC(_base.RPCBase):
         except Exception:
             raise _errors.ValueError(f'Failed to serialize to JSON: {data}')
 
-        return await self._send_post_request(str(self.url), data=data_json)
+        response = await self._send_post_request(str(self.url), data=data_json)
 
-    _auth_error_code = 401
-    _csrf_error_code = 409
-    _csrf_header = 'X-Transmission-Session-Id'
-
-    async def _connect(self):
-        # There is no special login procedure, we just make an appropriate
-        # request to get the CSRF header and ensure authentication works
-        response = await self._request('session-stats')
-
-        if response.status_code == self._csrf_error_code:
-            # Store CSRF header
+        if response.status_code == self._csrf_error_code and self._csrf_header in response.headers:
+            # Try again with CSRF header
             _log.debug('Setting CSRF header: %s = %s', self._csrf_header, response.headers[self._csrf_header])
             self._http_headers[self._csrf_header] = response.headers[self._csrf_header]
-            # Try again with CSRF header
-            await self._request('session-stats')
+            response = await self._send_post_request(str(self.url), data=data_json)
 
-        elif response.status_code == self._auth_error_code:
+        if response.status_code == self._auth_error_code:
             raise _errors.AuthenticationError('Authentication failed')
 
         elif response.status_code != 200:
             raise RuntimeError(f'Unexpected response: {response!r}')
+
+        return response
+
+    async def _connect(self):
+        # There is no special login procedure, we just make a valid request to
+        # see if it basically works
+        await self._request('session-stats')
 
     async def _disconnect(self):
         # Forget CSRF header
